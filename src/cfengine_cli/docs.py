@@ -18,7 +18,6 @@ from cfbs.pretty import pretty_file
 from cfengine_cli.lint import lint_policy_file
 from cfengine_cli.utils import UserError
 
-
 IGNORED_DIRS = [".git"]
 
 
