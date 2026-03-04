@@ -91,3 +91,36 @@ def finalize_vcf(versions_dict, checksums_dict, files_dict):
     )
 
     return versions_dict, checksums_dict, files_dict
+
+
+def filter_unstable_releases(data):
+    # Filter the data to only include stable releases (not debug, alpha, or beta releases):
+    filtered_data = []
+
+    for release_data in data.get("releases", []):
+        if release_data.get("debug") is True:
+            continue
+        if release_data.get("alpha") is True:
+            continue
+        if release_data.get("beta") is True:
+            continue
+
+        filtered_data.append(release_data)
+
+    return filtered_data
+
+
+def sort_release_data(file_checksums_dict):
+    # Newest versions first, and files sorted alphabetically within each version
+    for v in file_checksums_dict.keys():
+        file_checksums_dict[v] = dict_sorted_by_key(file_checksums_dict[v])
+
+    sorted_dict = OrderedDict(
+        sorted(
+            file_checksums_dict.items(),
+            key=lambda p: version_as_comparable_list(p[0]),
+            reverse=True,
+        )
+    )
+
+    return sorted_dict
