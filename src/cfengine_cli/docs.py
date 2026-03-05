@@ -349,7 +349,7 @@ def _run_prettier(path):
         # Wrong: prettier --write **.markdown **.md
         # Right: prettier --write '**.markdown' '**.md'
         subprocess.run(
-            ["prettier", "--write", *args],
+            ["prettier", "--embedded-language-formatting", "off", "--write", *args],
             capture_output=True,
             text=True,
             check=True,
