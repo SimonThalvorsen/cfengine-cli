@@ -28,8 +28,7 @@ jobs:
           python -m pip install uv
       - name: Setup
         run: |
-          uv venv
-          uv sync
+          uv sync --frozen
       - name: Check formatting with black
         run: |
           uv tool run black --check .
