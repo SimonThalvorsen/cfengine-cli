@@ -17,6 +17,9 @@ from tree_sitter import Language, Parser
 from cfbs.validate import validate_config
 from cfbs.cfbs_config import CFBSConfig
 
+DEPRECATED_PROMISE_TYPES = ["defaults", "guest_environments"]
+ALLOWED_BUNDLE_TYPES = ["agent", "common", "monitor", "server", "edit_line"]
+
 
 def lint_cfbs_json(filename) -> int:
     assert os.path.isfile(filename)
@@ -103,7 +106,36 @@ def _single_node_checks(filename, lines, node):
             f"Deprecation: Use 'if' instead of 'ifvarclass' at {filename}:{line}:{column}"
         )
         return 1
-    # TODO add more rules here
+    if node.type == "promise_guard":
+        assert _text(node) and len(_text(node)) > 1 and _text(node)[-1] == ":"
+        promise_type = _text(node)[0:-1]
+        if promise_type in DEPRECATED_PROMISE_TYPES:
+            _highlight_range(node, lines)
+            print(
+                f"Deprecation: Promise type '{promise_type}' is deprecated at {filename}:{line}:{column}"
+            )
+            return 1
+    if node.type == "bundle_block_name":
+        if _text(node) != _text(node).lower():
+            _highlight_range(node, lines)
+            print(
+                f"Convention: Bundle name should be lowercase at {filename}:{line}:{column}"
+            )
+            return 1
+    if node.type == "promise_block_name":
+        if _text(node) != _text(node).lower():
+            _highlight_range(node, lines)
+            print(
+                f"Convention: Promise type should be lowercase at {filename}:{line}:{column}"
+            )
+            return 1
+    if node.type == "bundle_block_type":
+        if _text(node) not in ALLOWED_BUNDLE_TYPES:
+            _highlight_range(node, lines)
+            print(
+                f"Error: Bundle type must be one of ({', '.join(ALLOWED_BUNDLE_TYPES)}), not '{_text(node)}' at {filename}:{line}:{column}"
+            )
+            return 1
     return 0
 
 
