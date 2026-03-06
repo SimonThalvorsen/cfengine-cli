@@ -140,14 +140,17 @@ def _single_node_checks(filename, lines, node):
 
 
 def _walk(filename, lines, node) -> int:
+    error_nodes = _find_node_type(filename, lines, node, "ERROR")
+    if error_nodes:
+        for node in error_nodes:
+            line = node.range.start_point[0] + 1
+            column = node.range.start_point[1] + 1
+            _highlight_range(node, lines)
+            print(f"Error: Syntax error at {filename}:{line}:{column}")
+        return len(error_nodes)
+
     line = node.range.start_point[0] + 1
     column = node.range.start_point[1] + 1
-    error_nodes = _find_node_type(filename, lines, node, "ERROR")
-    for node in error_nodes:
-        _highlight_range(node, lines)
-        print(f"Error: Syntax error at {filename}:{line}:{column}")
-    if error_nodes:
-        return len(error_nodes)
 
     errors = 0
     for node in _find_nodes(filename, lines, node):
