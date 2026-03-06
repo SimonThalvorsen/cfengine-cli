@@ -72,27 +72,54 @@ def _text(node):
     return node.text.decode()
 
 
+def _walk_generic(filename, lines, node, visitor):
+    visitor(node)
+    for node in node.children:
+        _walk_generic(filename, lines, node, visitor)
+
+
+def _find_node_type(filename, lines, node, node_type):
+    matches = []
+    visitor = lambda x: matches.extend([x] if x.type == node_type else [])
+    _walk_generic(filename, lines, node, visitor)
+    return matches
+
+
+def _find_nodes(filename, lines, node):
+    matches = []
+    visitor = lambda x: matches.append(x)
+    _walk_generic(filename, lines, node, visitor)
+    return matches
+
+
+def _single_node_checks(filename, lines, node):
+    """Things which can be checked by only looking at one node,
+    not needing to recurse into children."""
+    line = node.range.start_point[0] + 1
+    column = node.range.start_point[1] + 1
+    if node.type == "attribute_name" and _text(node) == "ifvarclass":
+        _highlight_range(node, lines)
+        print(
+            f"Deprecation: Use 'if' instead of 'ifvarclass' at {filename}:{line}:{column}"
+        )
+        return 1
+    # TODO add more rules here
+    return 0
+
+
 def _walk(filename, lines, node) -> int:
     line = node.range.start_point[0] + 1
-    column = node.range.start_point[1]
-    errors = 0
-    # Checking for syntax errors (already detected by parser / grammar).
-    # These are represented in the syntax tree as special ERROR nodes.
-    if node.type == "ERROR":
+    column = node.range.start_point[1] + 1
+    error_nodes = _find_node_type(filename, lines, node, "ERROR")
+    for node in error_nodes:
         _highlight_range(node, lines)
         print(f"Error: Syntax error at {filename}:{line}:{column}")
-        errors += 1
+    if error_nodes:
+        return len(error_nodes)
 
-    if node.type == "attribute_name":
-        if _text(node) == "ifvarclass":
-            _highlight_range(node, lines)
-            print(
-                f"Error: Use 'if' instead of 'ifvarclass' (deprecated) at {filename}:{line}:{column}"
-            )
-            errors += 1
-
-    for node in node.children:
-        errors += _walk(filename, lines, node)
+    errors = 0
+    for node in _find_nodes(filename, lines, node):
+        errors += _single_node_checks(filename, lines, node)
 
     return errors
 
@@ -100,6 +127,7 @@ def _walk(filename, lines, node) -> int:
 def lint_policy_file(
     filename, original_filename=None, original_line=None, snippet=None, prefix=None
 ):
+    print(f"Linting: {filename}")
     assert original_filename is None or type(original_filename) is str
     assert original_line is None or type(original_line) is int
     assert snippet is None or type(snippet) is int

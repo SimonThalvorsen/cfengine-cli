@@ -1,6 +1,7 @@
 import sys
 import os
 import re
+import itertools
 import json
 from cfengine_cli.profile import profile_cfengine, generate_callstack
 from cfengine_cli.dev import dispatch_dev_subcommand
@@ -94,20 +95,48 @@ def format(names, line_length) -> int:
     return 0
 
 
-def lint() -> int:
+def _lint_folder(folder):
     errors = 0
-    for filename in find(".", extension=".json"):
-        if filename.startswith(("./.", "./out/")):
+    while folder.endswith(("/.", "/")):
+        folder = folder[0:-1]
+    for filename in itertools.chain(
+        find(folder, extension=".json"), find(folder, extension=".cf")
+    ):
+        if filename.startswith(("./.", "./out/", folder + "/.", folder + "/out/")):
             continue
-        if filename.endswith("/cfbs.json"):
-            lint_cfbs_json(filename)
+        if filename.startswith(".") and not filename.startswith("./"):
             continue
-        errors += lint_json(filename)
+        errors += _lint_single_file(filename)
+    return errors
 
-    for filename in find(".", extension=".cf"):
-        if filename.startswith(("./.", "./out/")):
-            continue
-        errors += lint_policy_file(filename)
+
+def _lint_single_file(file):
+    assert os.path.isfile(file)
+    if file.endswith("/cfbs.json"):
+        return lint_cfbs_json(file)
+    if file.endswith(".json"):
+        return lint_json(file)
+    assert file.endswith(".cf")
+    return lint_policy_file(file)
+
+
+def _lint_single_arg(arg):
+    if os.path.isdir(arg):
+        return _lint_folder(arg)
+    assert os.path.isfile(arg)
+    _lint_single_file(arg)
+    return 0
+
+
+def lint(files) -> int:
+
+    if not files:
+        return _lint_folder(".")
+
+    errors = 0
+
+    for file in files:
+        errors += _lint_single_arg(file)
 
     if errors == 0:
         return 0
