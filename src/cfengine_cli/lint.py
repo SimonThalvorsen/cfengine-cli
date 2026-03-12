@@ -18,7 +18,7 @@ from cfbs.validate import validate_config
 from cfbs.cfbs_config import CFBSConfig
 
 DEPRECATED_PROMISE_TYPES = ["defaults", "guest_environments"]
-ALLOWED_BUNDLE_TYPES = ["agent", "common", "monitor", "server", "edit_line"]
+ALLOWED_BUNDLE_TYPES = ["agent", "common", "monitor", "server", "edit_line", "edit_xml"]
 
 
 def lint_cfbs_json(filename) -> int:
