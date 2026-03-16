@@ -8,6 +8,9 @@ from cfengine_cli.masterfiles.generate_vcf_git_checkout import generate_vcf_git_
 from cfengine_cli.masterfiles.check_download_matches_git import (
     check_download_matches_git,
 )
+from cfengine_cli.masterfiles.generate_git_tags import (
+    generate_git_tags_map,
+)
 from cfbs.utils import (
     get_json,
     immediate_subdirectories,
@@ -45,6 +48,8 @@ def generate_release_information_impl(
     generate_vcf_download(DOWNLOAD_PATH, downloaded_versions)
 
     generate_release_history()
+
+    generate_git_tags_map()
 
     if check:
         print(
