@@ -42,24 +42,29 @@ def clone_or_update_repo(repo):
 def get_commit_shas_from_tags(repo_path):
     # Returns a mapping of git tag to commit SHA for all version tags in the repo
     output = (
-        subprocess.check_output(["git", "show-ref", "--tags"], cwd=repo_path)
+        subprocess.check_output(["git", "show-ref", "--tags", "-d"], cwd=repo_path)
         .decode()
         .strip()
     )
     tag_map = {}
 
     for line in output.splitlines():
-        ref = line.split()[1]
-        tag = ref.split("refs/tags/")[1]
-        if re.fullmatch(TAG_REGEX, tag):
-            sha = (
-                subprocess.check_output(
-                    ["git", "log", "-n", "1", "--format=%H", tag], cwd=repo_path
-                )
-                .decode()
-                .strip()
-            )
-            tag_map[tag] = sha
+        parts = line.split()
+        if len(parts) != 2:
+            continue
+        sha, ref = parts
+
+        if ref.startswith("refs/tags/"):
+            tag = ref.split("refs/tags/")[1]
+            if tag.endswith("^{}"):
+                tag_name = tag[:-3]
+                if re.fullmatch(TAG_REGEX, tag_name):
+                    tag_map[tag_name] = sha
+            else:
+                if re.fullmatch(TAG_REGEX, tag):
+                    # Only set if not already set by ^{}
+                    if tag not in tag_map:
+                        tag_map[tag] = sha
 
     return tag_map
 
