@@ -12,10 +12,12 @@ $ cfengine lint
 
 import os
 import json
+import itertools
 import tree_sitter_cfengine as tscfengine
 from tree_sitter import Language, Parser
 from cfbs.validate import validate_config
 from cfbs.cfbs_config import CFBSConfig
+from cfbs.utils import find
 
 DEPRECATED_PROMISE_TYPES = ["defaults", "guest_environments"]
 ALLOWED_BUNDLE_TYPES = ["agent", "common", "monitor", "server", "edit_line", "edit_xml"]
@@ -231,3 +233,35 @@ def lint_policy_file(
     else:
         print(f"FAIL: {filename} ({errors} error{'s' if errors > 0 else ''})")
     return errors
+
+
+def lint_folder(folder):
+    errors = 0
+    while folder.endswith(("/.", "/")):
+        folder = folder[0:-1]
+    for filename in itertools.chain(
+        find(folder, extension=".json"), find(folder, extension=".cf")
+    ):
+        if filename.startswith(("./.", "./out/", folder + "/.", folder + "/out/")):
+            continue
+        if filename.startswith(".") and not filename.startswith("./"):
+            continue
+        errors += lint_single_file(filename)
+    return errors
+
+
+def lint_single_file(file):
+    assert os.path.isfile(file)
+    if file.endswith("/cfbs.json"):
+        return lint_cfbs_json(file)
+    if file.endswith(".json"):
+        return lint_json(file)
+    assert file.endswith(".cf")
+    return lint_policy_file(file)
+
+
+def lint_single_arg(arg):
+    if os.path.isdir(arg):
+        return lint_folder(arg)
+    assert os.path.isfile(arg)
+    return lint_single_file(arg)
