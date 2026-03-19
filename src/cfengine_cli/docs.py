@@ -16,7 +16,7 @@ import markdown_it
 from cfbs.pretty import pretty_file
 from cfbs.utils import find
 
-from cfengine_cli.lint import lint_policy_file
+from cfengine_cli.lint import lint_folder, lint_policy_file
 from cfengine_cli.utils import UserError
 
 IGNORED_DIRS = [".git"]
@@ -409,6 +409,9 @@ def check_docs() -> int:
 
     Run by the command:
     cfengine dev lint-docs"""
+    r = lint_folder(".")
+    if r != 0:
+        return r
     _process_markdown_code_blocks(
         path=".",
         languages=["json", "cf3"],
