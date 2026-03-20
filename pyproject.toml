@@ -12,7 +12,7 @@ requires-python = ">=3.10"
 dependencies = [
     "cf-remote>=0.7.3",
     "cfbs>=5.5.0",
-    "tree-sitter-cfengine>=1.1.5",
+    "tree-sitter-cfengine>=1.1.8",
     "tree-sitter>=0.25",
     "markdown-it-py>=3.0.0",
 ]
