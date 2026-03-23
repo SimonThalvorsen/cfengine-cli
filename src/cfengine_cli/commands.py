@@ -4,7 +4,7 @@ import re
 import json
 from cfengine_cli.profile import profile_cfengine, generate_callstack
 from cfengine_cli.dev import dispatch_dev_subcommand
-from cfengine_cli.lint import lint_single_arg, lint_folder
+from cfengine_cli.lint import lint_folder, lint_single_arg, set_strict
 from cfengine_cli.shell import user_command
 from cfengine_cli.paths import bin
 from cfengine_cli.version import cfengine_cli_version_string
@@ -94,7 +94,8 @@ def format(names, line_length) -> int:
     return 0
 
 
-def _lint(files) -> int:
+def _lint(files, strict) -> int:
+    set_strict(strict)
 
     if not files:
         return lint_folder(".")
@@ -107,8 +108,8 @@ def _lint(files) -> int:
     return errors
 
 
-def lint(files) -> int:
-    errors = _lint(files)
+def lint(files, strict) -> int:
+    errors = _lint(files, strict)
     if errors == 0:
         print("Success, no errors found.")
     else:

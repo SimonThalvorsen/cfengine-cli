@@ -52,6 +52,12 @@ def _get_arg_parser():
         "lint",
         help="Look for syntax errors and other simple mistakes",
     )
+    lnt.add_argument(
+        "--strict",
+        type=str,
+        default="yes",
+        help="Strict mode. Default=yes, checks for custom promisetypes",
+    )
     lnt.add_argument("files", nargs="*", help="Files to format")
     subp.add_parser(
         "report",
@@ -132,7 +138,7 @@ def run_command_with_args(args) -> int:
     if args.command == "format":
         return commands.format(args.files, args.line_length)
     if args.command == "lint":
-        return commands.lint(args.files)
+        return commands.lint(args.files, args.strict.lower() in ("y", "ye", "yes"))
     if args.command == "report":
         return commands.report()
     if args.command == "run":
