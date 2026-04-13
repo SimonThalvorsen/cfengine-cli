@@ -1601,6 +1601,13 @@
           "type": "slist",
           "visibility": "body"
         },
+        "smtpport": {
+          "attribute": "smtpport",
+          "range": "0,10080",
+          "status": "normal",
+          "type": "int",
+          "visibility": "body"
+        },
         "smtpserver": {
           "attribute": "smtpserver",
           "range": ".*",
