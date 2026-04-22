@@ -12,6 +12,6 @@ Error: Multiple promise attributes with ending semicolon found inside macro 'min
     # comment
       string => $($(baz));
       ^------------------^
-Error: Multiple promise attributes with ending semicolon found inside macro 'else' at tests/lint/017_half_promises.x.cf:26:7
+Error: Multiple promise attributes with ending semicolon found inside macro '!minimum_version(3.20)' at tests/lint/017_half_promises.x.cf:26:7
 FAIL: tests/lint/017_half_promises.x.cf (3 errors)
 Failure, 3 errors in total.

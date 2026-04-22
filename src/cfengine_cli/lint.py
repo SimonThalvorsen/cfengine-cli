@@ -448,7 +448,7 @@ class State:
                 self.old_state = deepcopy(self.__dict__)
                 self.macro = macro_type.split(" ")[-1]
             elif macro_type.startswith("@else"):
-                self.macro = "else"
+                self.macro = f"!{self.macro}"
                 self.old_state = deepcopy(self.__dict__)
                 self.__dict__.update(self.old_state)
             elif macro_type.startswith("@endif"):
@@ -776,17 +776,17 @@ def _lint_node(
                 )
                 return 1
     if node.type == "half_promise":
-        prev_sib = node.prev_named_sibling
-        while prev_sib and prev_sib.type == "comment":
-            prev_sib = prev_sib.prev_named_sibling
-        prev_type = prev_sib.type if prev_sib else None
         if not state.macro:
             _highlight_range(node, lines)
             print(
                 f"Error: Found promise attribute with no parent-promiser outside of a macro {location}"
             )
             return 1
-        elif prev_type != "macro":
+        prev_sib = node.prev_named_sibling
+        while prev_sib and prev_sib.type == "comment":
+            prev_sib = prev_sib.prev_named_sibling
+        prev_type = prev_sib.type if prev_sib else None
+        if prev_type != "macro":
             _highlight_range(node, lines)
             print(
                 f"Error: Multiple promise attributes with ending semicolon found inside macro '{state.macro}' {location}"
