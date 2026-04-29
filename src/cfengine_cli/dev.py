@@ -3,6 +3,7 @@ from cfengine_cli.masterfiles.generate_release_information import (
     generate_release_information_impl,
 )
 from cfengine_cli.utils import UserError
+from cfengine_cli.changelog import generate_changelog_impl
 from cfengine_cli.deptool import (
     update_dependency_tables as _update_dependency_tables,
     print_release_dependency_tables,
@@ -79,5 +80,7 @@ def dispatch_dev_subcommand(subcommand, args) -> int:
         return generate_release_information(
             args.omit_download, args.check_against_git, args.minimum_version
         )
+    if subcommand == "generate-changelog":
+        return generate_changelog_impl(args)
 
     raise UserError("Invalid cfengine dev subcommand - " + subcommand)
