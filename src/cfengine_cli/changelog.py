@@ -279,6 +279,11 @@ REPO_SETS = {
         "../nova",
         "../mission-portal",
     ],
+    "tmp-test-gh-changelog": [
+        "../enterprise",
+        "../nova",
+        "../mission-portal",
+    ],
     "masterfiles": [
         "../masterfiles",
     ],
