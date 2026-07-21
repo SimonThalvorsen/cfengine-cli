@@ -2,6 +2,28 @@ import argparse
 
 
 def parse_wrapper_args(subp: argparse._SubParsersAction):
+
+    sp = subp.add_parser(
+        "save", help="Save host(s) with a group name to use in other commands"
+    )
+    sp.add_argument(
+        "--role",
+        help="Role of the hosts",
+        choices=["hub", "hubs", "client", "clients"],
+        required=True,
+    )
+    sp.add_argument(
+        "--name",
+        help="Name of the group of hosts (can be used in other commands)",
+        required=True,
+    )
+    sp.add_argument(
+        "--hosts",
+        "-H",
+        help="SSH usernames and IPs for SSH and CFEngine in the form of user@ip",
+        required=True,
+    )
+
     sp = subp.add_parser(
         "setup-code", help="Fetches a new setup-code for mission-portal login"
     )

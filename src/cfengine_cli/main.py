@@ -179,6 +179,8 @@ def run_command_with_args(args) -> int:
     if args.command == "version":
         return commands.version()
     # The real commands:
+    if args.command == "save":
+        return cfengine_commands.save(hosts=args.hosts, role=args.role, name=args.name)
     if args.command == "build":
         return cfengine_commands.build()
     if args.command == "deploy":

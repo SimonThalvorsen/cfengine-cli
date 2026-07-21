@@ -4,6 +4,7 @@ import logging
 from cfbs.commands import build_command
 from cf_remote.commands import deploy as deploy_command
 from cf_remote.commands import destroy as destroy_command
+from cf_remote.commands import save as save_command
 from cf_remote.remote import run_command, transfer_file
 
 from cfengine_cli.utils import UserError
@@ -130,6 +131,10 @@ def _resolve_command_for_agent(agent: Executable, command: str) -> str:
 # ---------------------------------------------------------------------------
 # Commands
 # ---------------------------------------------------------------------------
+
+
+def save(hosts: str, role: str, name: str) -> int:  # TODO: Add to existing group
+    return save_command(hosts=hosts, role=role, name=name)
 
 
 def _refresh_agent(agent: Executable) -> int:
