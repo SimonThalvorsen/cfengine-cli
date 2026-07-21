@@ -111,14 +111,31 @@ A wrapper around the cf-remote `deploy`-function with some added niceties.")
 
     report_parser = subp.add_parser(
         "report",
-        help="Run the agent and hub commands necessary to get new reporting data",
+        help="Refresh reporting data",
+    )
+    report_parser.add_argument(
+        "--run-agent",
+        action="store_true",
+        help="Runs the agent on the chosen host(s) before collecting report data.",
     )
     report_parser.add_argument(
         "--host",
         type=str,
         default=None,
-        help="Select which installation to use by name/IP (e.g. 'local' or '192.168.56.90'). "
-        "If omitted and multiple installations of cf-agent+cf-hub are found, you'll be prompted.",
+        help="Only refresh one installation of cf-agent+cf-hub specified by name/IP (e.g. 'local' or '192.168.56.90')",
+    )
+    report_parser.add_argument(
+        "--all",
+        dest="all_hosts",
+        action="store_true",
+        help="Refresh every known host instead of capping at --max-hosts. Can be slow and "
+        "hard on the network with many hosts. Ignored if --host is given.",
+    )
+    report_parser.add_argument(
+        "--max-hosts",
+        type=int,
+        default=None,
+        help="Maximum number of hosts (including hub(s)) to refresh when --host is not given. Defaults to 25.",
     )
 
     run_parser = subp.add_parser(

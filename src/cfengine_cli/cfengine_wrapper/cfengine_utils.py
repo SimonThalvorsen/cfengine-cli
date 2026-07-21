@@ -1,6 +1,7 @@
 import os
 import shutil
 import logging
+import random
 import sys
 
 from collections.abc import Iterator
@@ -10,6 +11,8 @@ from cfengine_cli.cfengine_wrapper.cfengine_objects import Executable, Installat
 from cf_remote.remote import get_info
 from cf_remote.paths import CLOUD_STATE_FPATH
 from cf_remote.utils import read_json
+
+DEFAULT_MAX_REPORT_HOSTS = 25
 
 
 def prompt_yes_no(prompt: str, default: bool = True) -> bool:
@@ -106,7 +109,9 @@ def _find_all(binary_name: str) -> list[Executable]:
             continue
         if not data:
             continue
-        binary_path = data.get(key) if key == "agent" else "cf-hub" # band-aid fix, hostinfo does not have hub-executable path
+        binary_path = (
+            data.get(key) if key == "agent" else "cf-hub"
+        )  # band-aid fix, hostinfo does not have hub-executable path
         if binary_path:
             executables.append(
                 Executable(binary_name, host, binary_path, aliases=aliases)
@@ -239,3 +244,72 @@ def require_installation(target: str | None = None) -> Installation:
         f"Using {'local' if chosen.is_local else 'remote'} installation of cf-agent and cf-hub ({chosen.label})"
     )
     return chosen
+
+
+def select_report_targets(
+    target: str | None = None,
+    max_hosts: int | None = None,
+    refresh_all: bool = False,
+) -> tuple[list[Installation], list[Executable]]:
+    """
+    Decide which hosts `report()` should refresh new reporting data on.
+
+    - `target` given -> just that one hub installation
+    - `target` omitted -> every known hub installation, and a random
+      sample of the remaining (non-hub) cf-agent installations, capped so the
+      total (hubs + sampled hosts) doesn't exceed `max_hosts` (defaults to
+      DEFAULT_MAX_REPORT_HOSTS=25) unless `refresh_all` is set.
+    """
+    installations = _find_all_paired()
+    if not installations:
+        raise UserError(
+            "Could not find any installation of cf-agent + cf-hub locally "
+            "or on any configured remote host."
+        )
+
+    if target:
+        return [_select(installations, "cf-agent + cf-hub", target)], []
+
+    hub_locations = {installation.location for installation in installations}
+    other_agents = [
+        agent for agent in _find_all("cf-agent") if agent.location not in hub_locations
+    ]
+
+    if refresh_all:
+        return installations, other_agents
+
+    cap = DEFAULT_MAX_REPORT_HOSTS if max_hosts is None else max_hosts
+    budget = max(0, cap - len(installations))
+    if len(other_agents) <= budget:
+        return installations, other_agents
+
+    sampled_agents = random.sample(other_agents, budget)
+    logging.warning(
+        f"{len(other_agents)} additional host(s) found; refreshing a random "
+        f"{budget} of them (plus {len(installations)} hub(s)) to keep this fast. "
+        "Pass --all to refresh every host instead, or --max-hosts to change the limit."
+    )
+    return installations, sampled_agents
+
+
+def clients_by_hub_ip() -> dict[str, list[str]]:
+    """
+    Maps each hub's IP (as every host reports it via its 'policy_server'
+    field, e.g. "192.168.56.60") to the list of client IPs (their
+    ssh_host) that are bootstrapped to it.
+    """
+    mapping: dict[str, list[str]] = {}
+    for host, _ in _known_hosts():
+        try:
+            data = get_info(host)
+        except (Exception, SystemExit) as e:
+            logging.warning(f"Skipping {host}: {e}")
+            continue
+        if not data:
+            continue
+        policy_server = data.get("policy_server")
+        client_ip = data.get("ssh_host") or host.split("@", 1)[1]
+        if not policy_server or policy_server == client_ip:
+            continue
+        mapping.setdefault(policy_server, []).append(client_ip)
+    return mapping

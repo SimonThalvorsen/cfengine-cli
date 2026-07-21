@@ -12,11 +12,12 @@ from cfengine_cli.cfengine_wrapper.cfengine_objects import (
     _ensure_default_agent_flags,
 )
 from cfengine_cli.cfengine_wrapper.cfengine_utils import (
+    clients_by_hub_ip,
     extract_agent_file,
     prompt_two_options,
     prompt_yes_no,
     require_executable,
-    require_installation,
+    select_report_targets,
 )
 
 _DEFAULT_CFENGINE_INPUTS_DIR = "/var/cfengine/inputs"
@@ -131,14 +132,68 @@ def _resolve_command_for_agent(agent: Executable, command: str) -> str:
 # ---------------------------------------------------------------------------
 
 
-def report(target: str | None = None) -> int:  # TODO? ENT-14122
-    installation = require_installation(target)
-    rc = installation.agent.run("-KIf update.cf", "-KI")
-    if rc != 0:
-        return rc
-    return installation.hub.run(
-        "--query rebase -H 127.0.0.1", "--query delta -H 127.0.0.1"
-    )
+def _refresh_agent(agent: Executable) -> int:
+    try:
+        return agent.run("-KIf update.cf", "-KI")
+    except (Exception, SystemExit) as e:
+        logging.warning(f"Skipping {agent.label}: {e}")
+        return 1
+
+
+def _query_hub_delta(hub: Executable, client_ips: list[str]) -> int:
+    """
+    Ask a hub to recompute delta report data for itself and
+    for every client bootstrapped to it.
+    """
+    try:
+        queries = ["--query delta -H 127.0.0.1"] + [
+            f"--query delta -H {ip}" for ip in client_ips
+        ]
+        return hub.run(*queries)
+    except (Exception, SystemExit) as e:
+        logging.warning(f"Skipping hub {hub.label}: {e}")
+        return 1
+
+
+def report(
+    target: str | None = None,
+    max_hosts: int | None = None,
+    refresh_all: bool = False,
+    run_agent: bool = False,
+) -> int:
+    installations, agents = select_report_targets(target, max_hosts, refresh_all)
+    hub_client_map = clients_by_hub_ip()
+
+    hub_agent_failed = {}
+    if run_agent:
+        for installation in installations:
+            rc = _refresh_agent(installation.agent)
+            hub_agent_failed[installation.location] = rc != 0
+            if rc != 0:
+                logging.warning(f"Agent run failed on {installation.agent.label}")
+
+        for agent in agents:
+            rc = _refresh_agent(agent)
+            if rc != 0:
+                logging.warning(f"Refresh failed on {agent.label})")
+
+    any_hub_failed = False
+    for installation in installations:
+        if run_agent and hub_agent_failed[installation.location]:
+            # No point querying delta if agent run failed
+            any_hub_failed = True
+            continue
+        hub_ip = (
+            None if installation.is_local else installation.location.split("@", 1)[1]
+        )
+        client_ips = hub_client_map.get(hub_ip, []) if hub_ip else []
+        rc = _query_hub_delta(installation.hub, client_ips)
+        if rc != 0:
+            any_hub_failed = True
+            logging.warning(f"Hub refresh failed on {installation.label})")
+
+    return 1 if any_hub_failed else 0
+
 
 def new_setup_code(target: str | None = None) -> int:
     hub = require_executable("cf-hub", target)
