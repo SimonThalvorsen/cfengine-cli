@@ -9,7 +9,7 @@ from cf_remote.remote import run_command, transfer_file
 from cfengine_cli.utils import UserError
 from cfengine_cli.cfengine_wrapper.cfengine_objects import (
     Executable,
-    _ensure_default_agent_flags,
+    ensure_default_agent_flags,
 )
 from cfengine_cli.cfengine_wrapper.cfengine_utils import (
     clients_by_hub_ip,
@@ -114,7 +114,7 @@ def _resolve_command_for_agent(agent: Executable, command: str) -> str:
     if agent.name != "cf-agent":
         return command
 
-    command = _ensure_default_agent_flags(command)
+    command = ensure_default_agent_flags(command)
     file_arg = extract_agent_file(command)
     if not file_arg:
         return command

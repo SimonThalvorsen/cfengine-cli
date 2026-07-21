@@ -2,13 +2,14 @@ import os
 import shutil
 import logging
 import random
-import sys
 
 from collections.abc import Iterator
+from functools import lru_cache
+
+from cf_remote.remote import get_info
 from cfengine_cli.paths import bin
 from cfengine_cli.utils import UserError
 from cfengine_cli.cfengine_wrapper.cfengine_objects import Executable, Installation
-from cf_remote.remote import get_info
 from cf_remote.paths import CLOUD_STATE_FPATH
 from cf_remote.utils import read_json
 
@@ -16,8 +17,6 @@ DEFAULT_MAX_REPORT_HOSTS = 25
 
 
 def prompt_yes_no(prompt: str, default: bool = True) -> bool:
-    if not sys.stdin.isatty():
-        raise UserError(f"{prompt} -- no terminal to confirm.")
     suffix = "[Y/n]" if default else "[y/N]"
     answer = input(f"{prompt} {suffix} ").strip().lower()
     if not answer:
@@ -88,6 +87,22 @@ def _known_hosts(role_filter=None) -> Iterator[tuple[str, list[str]]]:
             yield host_id, aliases
 
 
+@lru_cache(maxsize=None)
+def _host_info(host: str):
+    try:
+        return get_info(host) or None
+    except (Exception, SystemExit) as e:
+        logging.warning(f"Skipping {host}: {e}")
+        return None
+
+
+def _hosts_with_info(role_filter=None):
+    for host, aliases in _known_hosts(role_filter):
+        data = _host_info(host)
+        if data:
+            yield host, aliases, data
+
+
 def _find_all(binary_name: str) -> list[Executable]:
     """Every location -- local, plus every matching remote host -- with `binary_name` installed."""
     executables = []
@@ -96,77 +111,26 @@ def _find_all(binary_name: str) -> list[Executable]:
     if local_path:
         executables.append(Executable(binary_name, "local", local_path))
 
-    role_filter = "hub" if binary_name == "cf-hub" else None
-    key = "agent" if binary_name == "cf-agent" else "hub"
-    for host, aliases in _known_hosts(role_filter=role_filter):
-        try:
-            data = get_info(host)
-        except (Exception, SystemExit) as e:
-            """Need to catch SystemExit as cf-remote's get_info() will SystemExit if
-            any ssh-connections does not work, for our case we still want to fetch
-            the ones that are up in case the user wants to use a different host"""
-            logging.warning(f"Skipping {host}: {e}")
-            continue
-        if not data:
-            continue
-        binary_path = (
-            data.get(key) if key == "agent" else "cf-hub"
-        )  # band-aid fix, hostinfo does not have hub-executable path
-        if binary_path:
-            executables.append(
-                Executable(binary_name, host, binary_path, aliases=aliases)
-            )
-
+    is_agent = binary_name == "cf-agent"
+    for host, aliases, data in _hosts_with_info(None if is_agent else "hub"):
+        # band-aid: hostinfo has no path for cf-hub, so assume it's on PATH
+        path = data.get("agent") if is_agent else "cf-hub"
+        if path:
+            executables.append(Executable(binary_name, host, path, aliases))
     return executables
 
 
 def _find_all_paired() -> list[Installation]:
     """Every location -- local or remote -- that has BOTH cf-agent and cf-hub."""
-    installations = []
-
-    local_agent_path = _find_local_path("cf-agent")
-    local_hub_path = _find_local_path("cf-hub")
-    if local_agent_path and local_hub_path:
-        installations.append(
-            Installation(
-                location="local",
-                agent=Executable("cf-agent", "local", local_agent_path),
-                hub=Executable("cf-hub", "local", local_hub_path),
-            )
-        )
-
-    for host, aliases in _known_hosts(role_filter="hub"):
-        try:
-            data = get_info(host)
-        except (Exception, SystemExit) as e:
-            # Same reasoning as _find_all()
-            logging.warning(f"Skipping {host}: {e}")
-            continue
-        if not data:
-            continue
-        agent_path = data.get("agent")
-        # If role is hub, assume hub exists and path resolves correctly
-        is_hub = data.get("role") == "hub"
-        hub_path = "cf-hub" if is_hub else None
-        if agent_path and hub_path:
-            installations.append(
-                Installation(
-                    location=host,
-                    agent=Executable("cf-agent", host, agent_path, aliases=aliases),
-                    hub=Executable("cf-hub", host, hub_path, aliases=aliases),
-                )
-            )
-
-    return installations
+    hubs = {e.location: e for e in _find_all("cf-hub")}
+    return [
+        Installation(agent.location, agent, hubs[agent.location])
+        for agent in _find_all("cf-agent")
+        if agent.location in hubs
+    ]
 
 
 def _prompt_choice(candidates, description):
-    if not sys.stdin.isatty():
-        labels = ", ".join(c.label for c in candidates)
-        raise UserError(
-            f"Multiple installations of {description} found ({labels}) "
-            f"and no terminal to prompt on. Specify one with --host."
-        )
     print(f"Multiple installations of {description} found:")
     for i, c in enumerate(candidates, 1):
         print(f"  {i}) {c.label}")
@@ -238,14 +202,6 @@ def require_executable(name: str, target: str | None = None) -> Executable:
     return chosen
 
 
-def require_installation(target: str | None = None) -> Installation:
-    chosen = _select(_find_all_paired(), "cf-agent + cf-hub", target)
-    logging.warning(
-        f"Using {'local' if chosen.is_local else 'remote'} installation of cf-agent and cf-hub ({chosen.label})"
-    )
-    return chosen
-
-
 def select_report_targets(
     target: str | None = None,
     max_hosts: int | None = None,
@@ -295,21 +251,12 @@ def select_report_targets(
 def clients_by_hub_ip() -> dict[str, list[str]]:
     """
     Maps each hub's IP (as every host reports it via its 'policy_server'
-    field, e.g. "192.168.56.60") to the list of client IPs (their
-    ssh_host) that are bootstrapped to it.
+    field) to the list of client IPs bootstrapped to it.
     """
     mapping: dict[str, list[str]] = {}
-    for host, _ in _known_hosts():
-        try:
-            data = get_info(host)
-        except (Exception, SystemExit) as e:
-            logging.warning(f"Skipping {host}: {e}")
-            continue
-        if not data:
-            continue
+    for host, _, data in _hosts_with_info():
         policy_server = data.get("policy_server")
         client_ip = data.get("ssh_host") or host.split("@", 1)[1]
-        if not policy_server or policy_server == client_ip:
-            continue
-        mapping.setdefault(policy_server, []).append(client_ip)
+        if policy_server and policy_server != client_ip:
+            mapping.setdefault(policy_server, []).append(client_ip)
     return mapping

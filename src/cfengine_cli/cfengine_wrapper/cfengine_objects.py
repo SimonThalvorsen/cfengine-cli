@@ -5,7 +5,7 @@ import logging
 import os
 
 
-def _ensure_default_agent_flags(command: str) -> str:
+def ensure_default_agent_flags(command: str) -> str:
     """
     cf-agent needs -K (no-lock), -I (inform), and -f (specify
     file) to actually run against a policy file the way people expect.
@@ -60,9 +60,6 @@ class Executable:
         return rc
 
     def _run_one(self, command: str) -> int:
-        if self.name == "cf-agent":
-            command = _ensure_default_agent_flags(command)
-
         if self.is_local:
             args = [self.path] + command.split()
             # cf-agent picks its workdir based on privilege: as root it uses
