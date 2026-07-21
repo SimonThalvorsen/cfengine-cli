@@ -106,7 +106,7 @@ def _find_all(binary_name: str) -> list[Executable]:
             continue
         if not data:
             continue
-        binary_path = data.get(key)
+        binary_path = data.get(key) if key == "agent" else "cf-hub" # band-aid fix, hostinfo does not have hub-executable path
         if binary_path:
             executables.append(
                 Executable(binary_name, host, binary_path, aliases=aliases)
@@ -197,6 +197,14 @@ def _select(candidates, description, target: str | None = None):
         raise UserError(
             f"Could not find {description} locally or on any configured remote host."
         )
+
+    if isinstance(target, list):
+        if len(target) > 1:
+            raise UserError(
+                f"Expected a single {description}, but got {len(target)}: "
+                f"{', '.join(target)}."
+            )
+        target = target[0] if target else None
 
     if target:
         matches = [c for c in candidates if _exact_match(c, target)]

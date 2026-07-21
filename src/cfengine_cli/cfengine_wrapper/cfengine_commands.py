@@ -140,6 +140,10 @@ def report(target: str | None = None) -> int:  # TODO? ENT-14122
         "--query rebase -H 127.0.0.1", "--query delta -H 127.0.0.1"
     )
 
+def new_setup_code(target: str | None = None) -> int:
+    hub = require_executable("cf-hub", target)
+    return hub.run("--new-setup-code")
+
 
 def run(*args, target: str | None = None) -> int:
     agent = require_executable("cf-agent", target)

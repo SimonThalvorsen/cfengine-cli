@@ -2,9 +2,19 @@ import argparse
 
 
 def parse_wrapper_args(subp: argparse._SubParsersAction):
+    sp = subp.add_parser(
+        "setup-code", help="Fetches a new setup-code for mission-portal login"
+    )
+    sp.add_argument(
+        "--hub",
+        "-H",
+        help="Hub from which to fetch new setup-code",
+        type=str,
+        default=None,
+    )
+
     subp.add_parser("build", help="Build a policy set from a CFEngine Build project\n\
 A wrapper arount the cfbs `build`-function.")
-
     sp = subp.add_parser("deploy", help="Deploy policy-set (masterfiles) to hub\n\
 A wrapper around the cf-remote `deploy`-function with some added niceties.")
     sp.add_argument("--hub", help="Hub(s) to deploy to", type=str)
