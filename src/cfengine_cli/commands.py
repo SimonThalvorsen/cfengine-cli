@@ -9,7 +9,9 @@ from cfengine_cli.version import cfengine_cli_version_string
 from cfengine_cli.format import format_paths
 from cfengine_cli.utils import UserError
 from cfengine_cli.up import validate_config, up_do, resolve_templates
+from cfengine_cli.initialize_project import init_policy_module, init_promise_type
 from cf_remote.paths import cf_remote_dir
+from cfbs.commands import init_command
 from pydantic import ValidationError
 
 
@@ -47,6 +49,26 @@ def lint(files, strict, syntax_path) -> int:
 
 def dev(subcommand, args) -> int:
     return dispatch_dev_subcommand(subcommand, args)
+
+
+def init(args):
+    if args.with_input and not args.policy_module:
+        raise UserError("--with-input can only be used together with --policy-module")
+
+    if args.policy_module:
+        rc = init_policy_module(
+            name=None,
+            with_input=args.with_input,
+            non_interactive=args.non_interactive,
+        )
+        format(names=[], line_length=80, check=False)
+        return rc
+    if args.promise_type:
+        rc = init_promise_type(name=None)
+        format(names=[], line_length=80, check=False)
+        return rc
+
+    return init_command()  # --policy-set, cfbs init, default
 
 
 def profile(args) -> int:

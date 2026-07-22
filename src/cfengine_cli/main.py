@@ -162,6 +162,33 @@ Core and Masterfiles only reflect themselves""",
         metavar="GIT_ARG",
         help="Commit range [other optional args], e.g. 3.27.0..origin/3.27.x",
     )
+
+    inip = subp.add_parser(
+        "init", help="Initialize a [policy-set, policy-module, promise-type] example."
+    )
+    inip.add_argument(
+        "--policy-set", help="Initializes an empty build-project.", action="store_true"
+    )
+    inip.add_argument(
+        "--policy-module",
+        help="Initializes a policy-module example.",
+        action="store_true",
+    )
+    inip.add_argument(
+        "--with-input",
+        help="When supplied in conjuction with --policy-module, add an input field to the example.",
+        action="store_true",
+    )
+    inip.add_argument(
+        "--promise-type",
+        help="Initializes a promise-type example.",
+        action="store_true",
+    )
+    inip.add_argument(
+        "--non-interactive",
+        help="Non-interactive mode",
+        action="store_true",
+    )
     return ap
 
 
@@ -181,6 +208,8 @@ def run_command_with_args(args) -> int:
     # The real commands:
     if args.command == "save":
         return cfengine_commands.save(hosts=args.hosts, role=args.role, name=args.name)
+    if args.command == "init":
+        return commands.init(args)
     if args.command == "build":
         return cfengine_commands.build()
     if args.command == "deploy":
