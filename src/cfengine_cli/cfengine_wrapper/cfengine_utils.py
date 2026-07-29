@@ -16,7 +16,9 @@ from cf_remote.utils import read_json
 DEFAULT_MAX_REPORT_HOSTS = 25
 
 
-def prompt_yes_no(prompt: str, default: bool = True) -> bool:
+def prompt_yes_no(prompt: str, default: bool = True, non_interactive=False) -> bool:
+    if non_interactive:
+        return default
     suffix = "[Y/n]" if default else "[y/N]"
     answer = input(f"{prompt} {suffix} ").strip().lower()
     if not answer:

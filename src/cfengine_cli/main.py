@@ -222,9 +222,9 @@ def run_command_with_args(args) -> int:
     if args.command == "init":
         return commands.init(args)
     if args.command == "build":
-        return cfengine_commands.build()
+        return cfengine_commands.build(args.hub, args.non_interactive)
     if args.command == "deploy":
-        return cfengine_commands.deploy(args.hub, args.masterfiles)
+        return cfengine_commands.deploy(args.hub, args.masterfiles, args.non_interactive)
     if args.command == "format":
         return commands.format(args.files, args.line_length, args.check)
     if args.command == "lint":

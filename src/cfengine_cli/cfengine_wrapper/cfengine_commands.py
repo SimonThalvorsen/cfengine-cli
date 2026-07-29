@@ -229,20 +229,39 @@ def destroy(groupname, del_all=False) -> int:
     return destroy_command(groupname)
 
 
-def build() -> int:
+def build(hub=None, non_interactive=False) -> int:
     rc = build_command()
     if rc != 0:
         return rc
-    if prompt_yes_no("Deploy the built policy set now?", default=True):
-        return deploy(None, None)
+    if prompt_yes_no("Deploy the built policy set now?", default=True, non_interactive=non_interactive):
+        return deploy(hub, None, non_interactive)
     return 0
 
 
-def deploy(target: str | list[str] | None, masterfiles: str | None = None) -> int:
+def deploy(
+    target: str | list[str] | None,
+    masterfiles: str | None = None,
+    non_interactive: bool = False,
+) -> int:
+    error = 0
     if isinstance(target, str):
         target = [target]
-    hubs = [require_executable("cf-agent", h).location for h in (target or [])] or None
-    return deploy_command(hubs, masterfiles)
+    hubs = {
+        x.location: x
+        for h in (target or [])
+        for x in [require_executable("cf-agent", h)]
+    } or None
+
+    # TODO/WOULD be nice: Deploy without run
+    if hubs:
+        error = deploy_command(hubs.keys(), masterfiles)
+    else:
+        return deploy_command(hubs, masterfiles)
+
+    if prompt_yes_no("Run policy set now?", default=True, non_interactive=non_interactive):
+        for hub in hubs:
+            hubs[hub].run("-KIf update.cf", "-KI")
+    return error
 
 
 def show(target: list[str] | None = None) -> int:

@@ -38,18 +38,29 @@ def parse_wrapper_args(subp: argparse._SubParsersAction):
         default=None,
     )
 
-    subp.add_parser(
+    sp = subp.add_parser(
         "build",
-        help="""Build a policy set from a CFEngine Build project.
-A wrapper around the cfbs `build`-function.""",
+        help="Build a policy set from a CFEngine Build project",
+        description="A wrapper around the cf-remote `build`-function with some added niceties",
     )
+    sp.add_argument(
+        "--non-interactive",
+        help="Non-interactive mode (picks the default for all prompts)",
+        action="store_true",
+    )
+    sp.add_argument("--hub", help="Hub(s) to deploy to after building", type=str)
 
     deploy_parser = subp.add_parser(
         "deploy",
-        help="""Deploy policy-set (masterfiles) to hub.
-A wrapper around the cf-remote `deploy`-function with some added niceties.""",
+        help="Deploy policy-set (masterfiles) to hub.",
+        description="A wrapper around the cf-remote `deploy`-function with some added niceties.",
     )
     add_deploy_args(deploy_parser)
+    deploy_parser.add_argument(
+        "--non-interactive",
+        help="Non-interactive mode (picks the default for all prompts)",
+        action="store_true",
+    )
 
     install_parser = subp.add_parser(
         "install",
