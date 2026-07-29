@@ -214,7 +214,7 @@ def run_command_with_args(args) -> int:
     if args.command == "init":
         return commands.init(args)
     if args.command == "build":
-        return cfengine_commands.build()
+        return cfengine_commands.build(args.hub)
     if args.command == "deploy":
         return cfengine_commands.deploy(args.hub, args.masterfiles)
     if args.command == "format":
