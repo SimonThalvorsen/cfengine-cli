@@ -1,6 +1,7 @@
 import os
 
-from cfbs.commands import build_command
+import cfbs
+from cfbs.commands import build_command, info_command, status_command
 from cf_remote import log
 from cf_remote.commands import deploy as deploy_command, info
 from cf_remote.commands import destroy as destroy_command
@@ -233,7 +234,11 @@ def build(hub=None, non_interactive=False) -> int:
     rc = build_command()
     if rc != 0:
         return rc
-    if prompt_yes_no("Deploy the built policy set now?", default=True, non_interactive=non_interactive):
+    if prompt_yes_no(
+        "Deploy the built policy set now?",
+        default=True,
+        non_interactive=non_interactive,
+    ):
         return deploy(hub, None, non_interactive)
     return 0
 
@@ -258,7 +263,9 @@ def deploy(
     else:
         return deploy_command(hubs, masterfiles)
 
-    if prompt_yes_no("Run policy set now?", default=True, non_interactive=non_interactive):
+    if prompt_yes_no(
+        "Run policy set now?", default=True, non_interactive=non_interactive
+    ):
         for hub in hubs:
             hubs[hub].run("-KIf update.cf", "-KI")
     return error
@@ -270,3 +277,14 @@ def show(target: list[str] | None = None) -> int:
     if isinstance(target, str):
         target = [target]
     return info(target)
+
+
+def moduleinfo(modules: list[str]) -> int:
+    if modules == []:
+        try:
+            status_command()
+        except Exception as e:
+            log.error(f"Failed to validate cfbs-status, make sure you are inside a cfbs-project: {e}")
+        return -1
+
+    return info_command(modules)

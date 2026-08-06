@@ -11,6 +11,18 @@ from cf_remote.args import (
 
 
 def parse_wrapper_args(subp: argparse._SubParsersAction):
+    moduleinfo_parser = subp.add_parser(
+        "moduleinfo",
+        help="Shows information about your  cfbs-project or a specific module",
+        description="A wrapper around the cfbs `status` function",
+    )
+
+    moduleinfo_parser.add_argument(
+        "modules",
+        nargs="*",
+        help="Module(s) for which you would like more info, utilizes cfbs `info` function",
+    )
+
     show_parser = subp.add_parser(
         "show", help="Shows your saved host-groups or info about a specified host"
     )
