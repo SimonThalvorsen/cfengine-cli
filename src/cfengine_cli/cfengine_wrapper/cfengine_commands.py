@@ -8,6 +8,7 @@ from cf_remote.commands import destroy as destroy_command
 from cf_remote.commands import save as save_command
 from cf_remote.commands import show as show_command
 from cf_remote.remote import run_command, transfer_file
+from cf_remote.commands import connect_cmd
 
 from cfengine_cli.utils import UserError
 from cfengine_cli.cfengine_wrapper.cfengine_objects import (
@@ -284,7 +285,13 @@ def moduleinfo(modules: list[str]) -> int:
         try:
             status_command()
         except Exception as e:
-            log.error(f"Failed to validate cfbs-status, make sure you are inside a cfbs-project: {e}")
+            log.error(
+                f"Failed to validate cfbs-status, make sure you are inside a cfbs-project: {e}"
+            )
         return -1
 
     return info_command(modules)
+
+
+def connect(host) -> int:
+    return connect_cmd(host)

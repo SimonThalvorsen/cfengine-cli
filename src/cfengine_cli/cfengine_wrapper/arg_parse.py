@@ -7,10 +7,19 @@ from cf_remote.args import (
     add_uninstall_args,
     add_spawn_args,
     add_destroy_args,
+    add_connect_args,
 )
 
 
 def parse_wrapper_args(subp: argparse._SubParsersAction):
+    add_connect_args(
+        subp.add_parser(
+            "connect",
+            help="Opens interactive ssh shell",
+            description="A wrapper around cf-remote `connect` function",
+        )
+    )
+
     moduleinfo_parser = subp.add_parser(
         "moduleinfo",
         help="Shows information about your  cfbs-project or a specific module",

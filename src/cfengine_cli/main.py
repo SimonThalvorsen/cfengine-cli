@@ -329,6 +329,8 @@ def run_command_with_args(args) -> int:
         return cfengine_commands.show(args.hosts)
     if args.command == "moduleinfo":
         return cfengine_commands.moduleinfo(args.modules)
+    if args.command == "connect":
+        return cfengine_commands.connect(args.hosts)
     raise UserError(f"Unknown command: '{args.command}'")
 
 
