@@ -1,3 +1,4 @@
+from collections import namedtuple
 import os
 import shutil
 import random
@@ -105,21 +106,34 @@ def _hosts_with_info(role_filter=None):
             yield host, aliases, data
 
 
+_Id = namedtuple("_Id", "location aliases")
+
+
+def _identities(binary_name: str) -> Iterator[_Id]:
+    """local + every known host as (location, aliases), without connecting."""
+    yield _Id("local", [])
+    for host, aliases in _known_hosts(None if binary_name == "cf-agent" else "hub"):
+        yield _Id(host, aliases)
+
+
+def _resolve(binary_name: str, ident: _Id) -> Executable | None:
+    """Connect (if remote) and build an Executable, or None if unavailable."""
+    if ident.location == "local":
+        path = _find_local_path(binary_name)
+        return Executable(binary_name, "local", path) if path else None
+    data = _host_info(ident.location)
+    if not data:
+        return None
+    # band-aid: hostinfo has no path for cf-hub, so assume it's on PATH
+    path = data.get("agent") if binary_name == "cf-agent" else "cf-hub"
+    return (
+        Executable(binary_name, ident.location, path, ident.aliases) if path else None
+    )
+
+
 def _find_all(binary_name: str) -> list[Executable]:
-    """Every location -- local, plus every matching remote host -- with `binary_name` installed."""
-    executables = []
-
-    local_path = _find_local_path(binary_name)
-    if local_path:
-        executables.append(Executable(binary_name, "local", local_path))
-
-    is_agent = binary_name == "cf-agent"
-    for host, aliases, data in _hosts_with_info(None if is_agent else "hub"):
-        # band-aid: hostinfo has no path for cf-hub, so assume it's on PATH
-        path = data.get("agent") if is_agent else "cf-hub"
-        if path:
-            executables.append(Executable(binary_name, host, path, aliases))
-    return executables
+    """Every location with `binary_name` installed (connects to all)."""
+    return [e for i in _identities(binary_name) if (e := _resolve(binary_name, i))]
 
 
 def _find_all_paired() -> list[Installation]:
@@ -197,7 +211,35 @@ def _select(candidates, description, target: str | None = None):
 
 
 def require_executable(name: str, target: str | None = None) -> Executable:
-    chosen = _select(_find_all(name), name, target)
+    if isinstance(target, list):
+        if len(target) > 1:
+            raise UserError(
+                f"Expected a single {name}, but got {len(target)}: {', '.join(target)}."
+            )
+        target = target[0] if target else None
+
+    if target:
+        idents = list(_identities(name))
+        matched = [i for i in idents if _exact_match(i, target)] or [
+            i for i in idents if _loose_match(i, target)
+        ]
+        if not matched:
+            raise UserError(
+                f"No installation of {name} matches '{target}'. "
+                f"Known: {', '.join(i.location for i in idents)}."
+            )
+        candidates = [e for i in matched if (e := _resolve(name, i))]
+        if not candidates:
+            raise UserError(
+                f"'{target}' matches a known host for {name}, but it is "
+                f"unreachable or lacks {name}."
+            )
+        chosen = (
+            candidates[0] if len(candidates) == 1 else _prompt_choice(candidates, name)
+        )
+    else:
+        chosen = _select(_find_all(name), name)
+
     log.info(
         f"Using {'local' if chosen.is_local else 'remote'} installation of {name} ({chosen.label})"
     )
