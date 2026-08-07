@@ -12,6 +12,17 @@ from cf_remote.args import (
 
 
 def parse_wrapper_args(subp: argparse._SubParsersAction):
+    input_parser = subp.add_parser(
+        "input",
+        help="Sets/updates input.json for selected module(s)",
+        description="A wrapper around the cfbs `input` function",
+    )
+    input_parser.add_argument(
+        "module",
+        nargs="+",
+        help="Module(s) for which to set input",
+    )
+
     add_connect_args(
         subp.add_parser(
             "connect",
