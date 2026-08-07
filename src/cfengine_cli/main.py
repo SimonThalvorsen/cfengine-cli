@@ -224,9 +224,19 @@ def run_command_with_args(args) -> int:
     if args.command == "build":
         return cfengine_commands.build(args.hub, args.non_interactive)
     if args.command == "deploy":
-        return cfengine_commands.deploy(args.hub, args.masterfiles, args.non_interactive)
+        return cfengine_commands.deploy(
+            args.hub, args.masterfiles, args.non_interactive
+        )
     if args.command == "input":
         return cfengine_commands.cfbs_input(args.module)
+    if args.command == "add":
+        return cfengine_commands.cfbs_add(args.module)
+    if args.command == "remove":
+        return cfengine_commands.cfbs_remove(args.module)
+    if args.command == "search":
+        return cfengine_commands.cfbs_search(args.module)
+    if args.command == "update":
+        return cfengine_commands.cfbs_update(args.to_update)
     if args.command == "format":
         return commands.format(args.files, args.line_length, args.check)
     if args.command == "lint":

@@ -8,7 +8,13 @@ from cf_remote.commands import save as save_command
 from cf_remote.commands import show as show_command
 from cf_remote.remote import run_command, transfer_file
 from cf_remote.commands import connect_cmd
-from cfbs.commands import input_command
+from cfbs.commands import (
+    input_command,
+    add_command,
+    remove_command,
+    update_command,
+    search_command,
+)
 
 from cfengine_cli.utils import UserError
 from cfengine_cli.cfengine_wrapper.cfengine_objects import (
@@ -297,5 +303,21 @@ def connect(host) -> int:
     return connect_cmd(host)
 
 
-def cfbs_input(modules: list[str] | None = None) -> int:
+def cfbs_input(modules: list[str]) -> int:
     return input_command(modules, "cfengine input")
+
+
+def cfbs_add(modules: list[str]) -> int:
+    return add_command(modules, "cfengine input")
+
+
+def cfbs_remove(modules: list[str] | None = None) -> int:
+    return remove_command(modules, "cfengine input")
+
+
+def cfbs_update(to_update) -> int:
+    return update_command(to_update)
+
+
+def cfbs_search(modules: list[str]) -> int:
+    return search_command(modules)

@@ -12,6 +12,48 @@ from cf_remote.args import (
 
 
 def parse_wrapper_args(subp: argparse._SubParsersAction):
+    update_parser = subp.add_parser(
+        "update",
+        help="Updates the current cfbs project",
+        description="A wrapper around the cfbs `update` function",
+    )
+    update_parser.add_argument(
+        "to_update",
+        nargs="*",
+        help="Directory of cfbs-project to update",
+    )
+    remove_parser = subp.add_parser(
+        "remove",
+        help="Removes the specified module(s) from cfbs project",
+        description="A wrapper around the cfbs `remove` function",
+    )
+    remove_parser.add_argument(
+        "module",
+        nargs="+",
+        help="Module(s) for which to remove",
+    )
+
+    add_parser = subp.add_parser(
+        "add",
+        help="Adds the specified module(s) to cfbs project",
+        description="A wrapper around the cfbs `add` function",
+    )
+    add_parser.add_argument(
+        "module",
+        nargs="+",
+        help="Module(s) for which to add",
+    )
+    search_parser = subp.add_parser(
+        "search",
+        help="Searches the build-index for specified module(s)",
+        description="A wrapper around the cfbs `search` function",
+    )
+    search_parser.add_argument(
+        "module",
+        nargs="+",
+        help="Module(s) for which to lookup",
+    )
+
     input_parser = subp.add_parser(
         "input",
         help="Sets/updates input.json for selected module(s)",
