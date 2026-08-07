@@ -133,8 +133,8 @@ def parse_wrapper_args(subp: argparse._SubParsersAction):
 
     run_parser = subp.add_parser(
         "run",
-        description="Run the CFEngine agent, fetching, evaluating, and enforcing policy.\n\
-A wrapper around the cf-remote `run`-function with some added niceties",
+        help="Run the CFEngine agent, fetching, evaluating, and enforcing policy.",
+        description="A wrapper around the cf-remote `run`-function with some added niceties",
         epilog="""Examples:
   `cfengine run` defaults to use `cf-agent -KIf update.cf && cf-agent -KI`
 
