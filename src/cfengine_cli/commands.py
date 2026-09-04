@@ -12,6 +12,7 @@ from cfengine_cli.up import validate_config, up_do, resolve_templates
 from cfengine_cli.initialize_project import init_policy_module, init_promise_type
 from cf_remote.paths import cf_remote_dir
 from cfbs.commands import init_command
+from cfengine_cli.cfengine_wrapper.cfengine_commands import test as _cfengine_test
 from pydantic import ValidationError
 
 
@@ -45,6 +46,17 @@ def lint(files, strict, syntax_path) -> int:
     else:
         print(f"Failure, {errors} errors in total.")
     return errors
+
+
+def test(files, strict) -> int:
+    errors = _lint(files, strict, None)
+    if errors != 0:
+        plural = "error" if errors == 1 else "errors"
+        print(f"Lint failed, {errors} {plural} in total. Skipping build/deploy/run.")
+        return errors
+
+    print("Lint passed, no errors found.")
+    return _cfengine_test()
 
 
 def dev(subcommand, args) -> int:

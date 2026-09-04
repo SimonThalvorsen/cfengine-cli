@@ -22,6 +22,7 @@ from cfbs.commands import (
 )
 
 from cfengine_cli.utils import UserError
+from cfengine_cli.container import run_in_container
 from cfengine_cli.cfengine_wrapper.cfengine_objects import (
     Executable,
     ensure_default_agent_flags,
@@ -285,6 +286,14 @@ def deploy(
         for hub in hubs:
             hubs[hub].run("-KIf update.cf", "-KI")
     return error
+
+
+def test() -> int:
+    rc = build_command()
+    if rc != 0:
+        return rc
+
+    return run_in_container("out/masterfiles")
 
 
 def show(target: list[str] | None = None) -> int:

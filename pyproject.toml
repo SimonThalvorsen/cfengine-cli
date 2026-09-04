@@ -43,7 +43,7 @@ cfengine = "cfengine_cli.main:main"
 license-files = [] # Workaround bug in setuptools https://github.com/astral-sh/uv/issues/9513
 
 [tool.setuptools.package-data]
-cfengine_cli = ["*.json"] # syntax-description.json
+cfengine_cli = ["*.json", "docker/test-agent/Dockerfile"] # syntax-description.json, cfengine test's container
 
 [tool.pyright]
 include = ["src"]
