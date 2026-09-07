@@ -1,5 +1,5 @@
 [run]
 parallel = True
-source = src
+source = ${PROJECT_ROOT}/src
 concurrency = multiprocessing
 sigterm = True

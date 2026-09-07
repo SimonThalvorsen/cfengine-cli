@@ -23,7 +23,9 @@ install:
 	pipx install --force --editable .
 
 
-export COVERAGE_PROCESS_START = $(PWD)/.coveragerc
+coverage: export COVERAGE_PROCESS_START = $(PWD)/.coveragerc
+coverage: export COVERAGE_FILE = $(PWD)/.coverage
+coverage: export PROJECT_ROOT = $(PWD)
 coverage:
 	uv run coverage erase
 	uv run coverage run --parallel-mode -m pytest
