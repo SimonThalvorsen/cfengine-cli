@@ -27,14 +27,14 @@ def ensure_default_agent_flags(command: str) -> str:
 class Executable:
     """
     A single binary (cf-agent or cf-hub) at a known location -- either
-    "local" or a remote host identifier ("user@ip"). Knows its own path
+    localhost or a remote host identifier ("user@ip"). Knows its own path
     and how to run a command against itself, whether that means a local
     subprocess or an SSH call via cf-remote.
     """
 
     def __init__(self, name: str, location: str, path: str, aliases=None) -> None:
         self.name = name  # "cf-agent" / "cf-hub"
-        self.location = location  # "local" or "user@ip"
+        self.location = location  # "localhost" or "user@ip"
         self.path = path  # absolute path to the binary at that location
         self.aliases = (
             aliases or []
@@ -42,7 +42,7 @@ class Executable:
 
     @property
     def is_local(self) -> bool:
-        return self.location == "local"
+        return self.location == "localhost"
 
     @property
     def label(self) -> str:
@@ -102,7 +102,7 @@ class Installation:
 
     @property
     def is_local(self) -> bool:
-        return self.location == "local"
+        return self.location == "localhost"
 
     @property
     def aliases(self) -> list:

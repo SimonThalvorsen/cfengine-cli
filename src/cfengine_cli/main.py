@@ -399,7 +399,7 @@ def validate_args(args):
     if "hub" in args and args.hub:
         log.debug(f"validate_args, hubs in args, args.hub='{args.hub}'")
         if args.hub in ["local", "localhost"]:
-            args.hub = ["local"]
+            args.hub = ["localhost"]
         else:
             args.hub = resolve_hosts(args.hub)
 

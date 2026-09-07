@@ -111,16 +111,16 @@ _Id = namedtuple("_Id", "location aliases")
 
 def _identities(binary_name: str) -> Iterator[_Id]:
     """local + every known host as (location, aliases), without connecting."""
-    yield _Id("local", ["localhost"])
+    yield _Id("localhost", ["localhost", "local"])
     for host, aliases in _known_hosts(None if binary_name == "cf-agent" else "hub"):
         yield _Id(host, aliases)
 
 
 def _resolve(binary_name: str, ident: _Id) -> Executable | None:
     """Connect (if remote) and build an Executable, or None if unavailable."""
-    if ident.location == "local":
+    if ident.location == "localhost":
         path = _find_local_path(binary_name)
-        return Executable(binary_name, "local", path) if path else None
+        return Executable(binary_name, "localhost", path) if path else None
     data = _host_info(ident.location)
     if not data:
         return None

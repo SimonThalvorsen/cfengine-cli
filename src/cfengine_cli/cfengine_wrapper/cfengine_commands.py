@@ -272,10 +272,7 @@ def deploy(
 
     # TODO/WOULD be nice: Deploy without run (CFE-4704: https://northerntech.atlassian.net/browse/CFE-4704)
     if hubs:
-        # cf-remote functions use "localhost" (not "local" as it is here)
-        deploy_targets = [
-            "localhost" if location == "local" else location for location in hubs
-        ]
+        deploy_targets = [location for location in hubs]
         error = deploy_command(deploy_targets, masterfiles)
     else:
         return deploy_command(hubs, masterfiles)
