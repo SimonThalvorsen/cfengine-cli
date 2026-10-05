@@ -112,6 +112,20 @@ def _get_arg_parser():
         nargs="*",
         help="Files/Folder to lint (default is . (the entire project) )",
     )
+    tst.add_argument(
+        "--dockerfile",
+        type=str,
+        default=None,
+        help="Path to a custom Dockerfile (or its directory) to build the test "
+        "container from, instead of the built-in one -- e.g. to test against "
+        "a different base distro",
+    )
+    tst.add_argument(
+        "--rebuild",
+        action="store_true",
+        help="Force a clean rebuild of the test container image, bypassing "
+        "Docker's build cache",
+    )
 
     dev_parser = subp.add_parser(
         "dev", help="Utilities intended for developers / maintainers of CFEngine"
@@ -274,6 +288,8 @@ def run_command_with_args(args) -> int:
         return commands.test(
             args.files,
             (args.strict.lower() in ("y", "ye", "yes")),
+            args.dockerfile,
+            args.rebuild,
         )
     if args.command == "report":
         return cfengine_commands.report(

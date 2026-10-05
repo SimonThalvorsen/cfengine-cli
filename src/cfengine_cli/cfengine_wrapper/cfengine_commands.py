@@ -24,7 +24,12 @@ from cfbs.commands import (
 )
 
 from cfengine_cli.utils import UserError
-from cfengine_cli.container import run_in_container
+from cfengine_cli.container import (
+    run_in_container,
+    run_files_in_container,
+    discover_test_files,
+    discover_module_files,
+)
 from cfengine_cli.cfengine_wrapper.cfengine_objects import (
     Executable,
     ensure_default_agent_flags,
@@ -287,12 +292,50 @@ def deploy(
     return error
 
 
-def test() -> int:
-    rc = build_command()
-    if rc != 0:
-        return rc
+def test(dockerfile: str | None = None, rebuild: bool = False) -> int:
+    is_cfbs = is_cfbs_repo()
+    if is_cfbs:
+        # Build first so any custom promise types / modules this
+        # project uses are shipped
+        rc = build_command()
+        if rc != 0:
+            return rc
 
-    return run_in_container("out/masterfiles")
+    discovered = discover_test_files()
+    if discovered:
+        return run_files_in_container(
+            discover_module_files() + discovered,
+            masterfiles_dir="out/masterfiles" if is_cfbs else None,
+            dockerfile=dockerfile,
+            rebuild=rebuild,
+        )
+
+    if is_cfbs:
+        return run_in_container(
+            "out/masterfiles", dockerfile=dockerfile, rebuild=rebuild
+        )
+
+    raise UserError(
+        "Nothing to test here -- no cfbs.json project and no test_*.cf files "
+        "found. Add a test_*.cf file, or run `cfengine init` to start a cfbs "
+        "project."
+    )
+
+
+def test_files(
+    files: list, dockerfile: str | None = None, rebuild: bool = False
+) -> int:
+    is_cfbs = is_cfbs_repo()
+    if is_cfbs:
+        rc = build_command()
+        if rc != 0:
+            return rc
+    return run_files_in_container(
+        files,
+        masterfiles_dir="out/masterfiles" if is_cfbs else None,
+        dockerfile=dockerfile,
+        rebuild=rebuild,
+    )
 
 
 def show(target: list[str] | None = None) -> int:

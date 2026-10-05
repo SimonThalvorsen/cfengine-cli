@@ -1,0 +1,31 @@
+bundle agent variables
+{
+  vars:
+    "half_life" string => eval("3.5 * 2", "math", "infix");
+}
+
+bundle agent test_computed_metrics_equality
+{
+  methods:
+    "variables";
+
+  assert:
+    "half life doubled equals seven"
+      real => "$(variables.half_life)",
+      equals => "7";
+}
+
+bundle agent test_computed_metrics_comparison
+{
+  methods:
+    "variables";
+
+  assert:
+    "half life doubled is greater than five"
+      real => "$(variables.half_life)",
+      greater_than => "5";
+
+    "half life doubled is less than five (deliberately wrong)"
+      real => "$(variables.half_life)",
+      less_than => "5";
+}
