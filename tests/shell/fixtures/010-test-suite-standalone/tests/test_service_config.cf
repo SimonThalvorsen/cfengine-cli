@@ -1,0 +1,40 @@
+bundle agent test_service_config_contents
+{
+  files:
+    "/tmp/cfengine_test_suite_service.conf"
+      create => "true",
+      content => "$(def.expected_contents)",
+      perms => demo_perms;
+
+  assert:
+    "config file exists"
+      file => "/tmp/cfengine_test_suite_service.conf",
+      exists => "true";
+
+    "config file has the fixture's contents"
+      file => "/tmp/cfengine_test_suite_service.conf",
+      contents => "$(def.expected_contents)";
+}
+
+bundle agent test_service_config_permissions
+{
+  files:
+    "/tmp/cfengine_test_suite_service.conf"
+      create => "true",
+      content => "$(def.expected_contents)",
+      perms => demo_perms;
+
+  assert:
+    "config file has mode 0640"
+      file => "/tmp/cfengine_test_suite_service.conf",
+      perms => "0640";
+
+    "config file is not world-writable (deliberately wrong check)"
+      file => "/tmp/cfengine_test_suite_service.conf",
+      perms => "0777";
+}
+
+body perms demo_perms
+{
+  mode => "0640";
+}
