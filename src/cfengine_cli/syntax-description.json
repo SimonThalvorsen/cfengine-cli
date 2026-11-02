@@ -3272,8 +3272,50 @@
     },
     "when": {
       "attributes": {
+        "file_content_modified": {
+          "attribute": "file_content_modified",
+          "range": ".*",
+          "status": "normal",
+          "type": "string",
+          "visibility": "body"
+        },
+        "file_created": {
+          "attribute": "file_created",
+          "range": ".*",
+          "status": "normal",
+          "type": "string",
+          "visibility": "body"
+        },
         "file_deleted": {
           "attribute": "file_deleted",
+          "range": ".*",
+          "status": "normal",
+          "type": "string",
+          "visibility": "body"
+        },
+        "file_modified": {
+          "attribute": "file_modified",
+          "range": ".*",
+          "status": "normal",
+          "type": "string",
+          "visibility": "body"
+        },
+        "file_owner_changed": {
+          "attribute": "file_owner_changed",
+          "range": ".*",
+          "status": "normal",
+          "type": "string",
+          "visibility": "body"
+        },
+        "file_permissions_changed": {
+          "attribute": "file_permissions_changed",
+          "range": ".*",
+          "status": "normal",
+          "type": "string",
+          "visibility": "body"
+        },
+        "file_size_exceeds": {
+          "attribute": "file_size_exceeds",
           "range": ".*",
           "status": "normal",
           "type": "string",
@@ -3297,6 +3339,27 @@
           "range": "",
           "status": "normal",
           "type": "slist",
+          "visibility": "body"
+        },
+        "size_threshold": {
+          "attribute": "size_threshold",
+          "range": "0,99999999999",
+          "status": "normal",
+          "type": "int",
+          "visibility": "body"
+        },
+        "user_added": {
+          "attribute": "user_added",
+          "range": ".*",
+          "status": "normal",
+          "type": "string",
+          "visibility": "body"
+        },
+        "user_removed": {
+          "attribute": "user_removed",
+          "range": ".*",
+          "status": "normal",
+          "type": "string",
           "visibility": "body"
         }
       },
@@ -3374,6 +3437,16 @@
     "reactor": {
       "promiseTypes": [
         "events",
+        "commands",
+        "databases",
+        "guest_environments",
+        "files",
+        "methods",
+        "packages",
+        "processes",
+        "services",
+        "storage",
+        "users",
         "classes",
         "defaults",
         "meta",
