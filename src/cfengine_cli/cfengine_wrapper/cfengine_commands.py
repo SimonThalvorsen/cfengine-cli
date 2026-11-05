@@ -220,9 +220,37 @@ def setup_code(target: str | None = None) -> int:
     return hub.run("--new-setup-code")
 
 
+def _policy_changed_since_build() -> bool:
+    """True if there is no build, or project files changed since the last one."""
+    tarball = os.path.join("out", "masterfiles.tgz")
+    if not os.path.isfile(tarball):
+        return True
+    built_at = os.path.getmtime(tarball)
+    for root, dirs, files in os.walk("."):
+        # Skip build output and hidden entries (.git, editor state, ...)
+        dirs[:] = [d for d in dirs if d[0] != "." and (root, d) != (".", "out")]
+        for name in files:
+            path = os.path.join(root, name)
+            if name[0] != "." and os.path.getmtime(path) > built_at:
+                return True
+    return False
+
+
 def run(*args, target: str | None = None) -> int:
     agent = require_executable("cf-agent", target)
     if not args:
+        if (
+            is_cfbs_repo()
+            and has_known_hubs()
+            and _policy_changed_since_build()
+            and prompt_yes_no(
+                "The policy set has changed since it was last built. "
+                "Build and deploy it before running?"
+            )
+        ):
+            rc = build_command() or deploy_command(None, None)
+            if rc != 0:
+                return rc
         return agent.run("-KIf update.cf", "-KI")
 
     resolved = []

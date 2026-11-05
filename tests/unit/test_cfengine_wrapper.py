@@ -1,7 +1,52 @@
+import os
+
 import pytest
 
-from cfengine_cli.cfengine_wrapper import cfengine_utils
+from cfengine_cli.cfengine_wrapper import cfengine_commands, cfengine_utils
 from cfengine_cli.cfengine_wrapper.cfengine_utils import _Id
+
+# ---------------------------------------------------------------------------
+# Detecting changes since the last build
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture
+def built_project(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "cfbs.json").write_text("{}")
+    (tmp_path / "mymodule").mkdir()
+    (tmp_path / "mymodule" / "main.cf").write_text("bundle agent main {}")
+    (tmp_path / "out").mkdir()
+    (tmp_path / "out" / "masterfiles.tgz").write_bytes(b"built")
+    # Sources older than the build
+    for path in ["cfbs.json", "mymodule/main.cf"]:
+        os.utime(tmp_path / path, (1000, 1000))
+    return tmp_path
+
+
+def test_changed_since_build_without_tarball(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    assert cfengine_commands._policy_changed_since_build()
+
+
+def test_changed_since_build_up_to_date(built_project):
+    assert not cfengine_commands._policy_changed_since_build()
+
+
+def test_changed_since_build_after_policy_change(built_project):
+    (built_project / "mymodule" / "main.cf").write_text("changed")
+    os.utime(built_project / "mymodule" / "main.cf", None)
+    os.utime(built_project / "out" / "masterfiles.tgz", (2000, 2000))
+    assert cfengine_commands._policy_changed_since_build()
+
+
+def test_changed_since_build_ignores_out_and_hidden(built_project):
+    os.utime(built_project / "out" / "masterfiles.tgz", (2000, 2000))
+    (built_project / ".git").mkdir()
+    (built_project / ".git" / "index").write_text("")
+    (built_project / ".gitignore").write_text("out/\n")
+    assert not cfengine_commands._policy_changed_since_build()
+
 
 # ---------------------------------------------------------------------------
 # Host selection
