@@ -8,6 +8,7 @@ from cfbs.cfbs_config import CFBSConfig
 from cfbs.utils import write_json, canonify
 from cfengine_cli.utils import UserError
 from cfbs.git import git_commit, git_init
+from cfbs.commands import init_command
 
 GITIGNORE = "out/\n*.tgz\n"
 
@@ -125,6 +126,15 @@ def init_policy_module(name=None, with_input=False, non_interactive=False):
 
     _print_next_steps(name, module_name, with_input)
     return 0
+
+
+def init_policy_set():
+    rc = init_command()
+    if rc == 0 and not os.path.exists(".gitignore"):
+        _write_file(".gitignore", GITIGNORE)
+        if CFBSConfig.get_instance().get("git"):
+            git_commit("Added .gitignore", scope=[".gitignore"])
+    return rc
 
 
 def _require_uninitialized():

@@ -9,9 +9,12 @@ from cfengine_cli.version import cfengine_cli_version_string
 from cfengine_cli.format import format_paths
 from cfengine_cli.utils import UserError
 from cfengine_cli.up import validate_config, up_do, resolve_templates
-from cfengine_cli.initialize_project import init_policy_module, init_promise_type
+from cfengine_cli.initialize_project import (
+    init_policy_module,
+    init_policy_set,
+    init_promise_type,
+)
 from cf_remote.paths import cf_remote_dir
-from cfbs.commands import init_command
 from cfengine_cli.cfengine_wrapper.cfengine_commands import test as _cfengine_test
 from pydantic import ValidationError
 
@@ -78,7 +81,7 @@ def init(args):
         rc = init_promise_type(name=None)
         return rc
 
-    return init_command()  # --policy-set, cfbs init, default
+    return init_policy_set()  # --policy-set, cfbs init, default
 
 
 def profile(args) -> int:
