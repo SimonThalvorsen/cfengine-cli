@@ -111,7 +111,17 @@ def _hosts_with_info(role_filter=None):
             yield host, aliases, data
 
 
-_Id = namedtuple("_Id", "location aliases")
+class _Id(namedtuple("_Id", "location aliases")):
+    @property
+    def label(self) -> str:
+        if self.aliases and self.location != "localhost":
+            return f"{self.aliases[0]} ({self.location})"
+        return self.location
+
+
+def known_hub_locations() -> list[str]:
+    """ "user@ip" of every hub cf-remote knows about (without connecting)."""
+    return [host for host, _ in _known_hosts("hub")]
 
 
 def _identities(binary_name: str) -> Iterator[_Id]:
@@ -216,6 +226,27 @@ def _select(candidates, description, target: str | None = None):
     return _prompt_choice(candidates, description)
 
 
+def _select_without_connecting(name: str) -> Executable:
+    """Only connects to the chosen host. Hubs first, so Enter picks a hub."""
+    hubs = set(known_hub_locations())
+    remote = [i for i in _identities(name) if i.location != "localhost"]
+    local = [_Id("localhost", ["localhost", "local"])] if _find_local_path(name) else []
+    ordered = (
+        [i for i in remote if i.location in hubs]
+        + local
+        + [i for i in remote if i.location not in hubs]
+    )
+    if not ordered:
+        raise UserError(
+            f"Could not find {name} locally or on any configured remote host."
+        )
+    ident = ordered[0] if len(ordered) == 1 else _prompt_choice(ordered, name)
+    chosen = _resolve(name, ident)
+    if chosen is None:
+        raise UserError(f"{ident.label} is unreachable or lacks {name}.")
+    return chosen
+
+
 def require_executable(name: str, target: str | None = None) -> Executable:
     if isinstance(target, list):
         if len(target) > 1:
@@ -244,7 +275,7 @@ def require_executable(name: str, target: str | None = None) -> Executable:
             candidates[0] if len(candidates) == 1 else _prompt_choice(candidates, name)
         )
     else:
-        chosen = _select(_find_all(name), name)
+        chosen = _select_without_connecting(name)
 
     log.info(
         f"Using {'local' if chosen.is_local else 'remote'} installation of {name} ({chosen.label})"
