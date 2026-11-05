@@ -1,10 +1,17 @@
 import pytest
 
 from cfengine_cli.cfengine_wrapper import cfengine_utils
+from cfengine_cli.cfengine_wrapper.cfengine_utils import _Id
 
 # ---------------------------------------------------------------------------
 # Host selection
 # ---------------------------------------------------------------------------
+
+
+def test_prompt_choice_defaults_to_first(monkeypatch):
+    monkeypatch.setattr("builtins.input", lambda _: "")
+    candidates = [_Id("root@1.1.1.1", ["hub"]), _Id("root@2.2.2.2", ["client"])]
+    assert cfengine_utils._prompt_choice(candidates, "cf-agent") == candidates[0]
 
 
 def test_select_without_connecting_lists_hubs_first(monkeypatch):

@@ -163,11 +163,13 @@ def _find_all_paired() -> list[Installation]:
 
 
 def _prompt_choice(candidates, description):
+    """Numbered prompt; pressing Enter picks the first candidate."""
     print(f"Multiple installations of {description} found:")
     for i, c in enumerate(candidates, 1):
         print(f"  {i}) {c.label}")
     while True:
-        choice = input(f"Select which to use [1-{len(candidates)}]: ").strip()
+        choice = input(f"Select which to use [1-{len(candidates)}, default 1]: ")
+        choice = choice.strip() or "1"
         if choice.isdigit() and 1 <= int(choice) <= len(candidates):
             return candidates[int(choice) - 1]
         print("Invalid selection, try again.")
