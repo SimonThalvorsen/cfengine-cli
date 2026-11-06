@@ -50,7 +50,7 @@ def parse_wrapper_args(subp: argparse._SubParsersAction):
     remove_parser.add_argument(
         "module",
         nargs="+",
-        help="Module(s) for which to remove",
+        help="Module(s) to remove",
     )
 
     add_parser = subp.add_parser(
@@ -61,7 +61,7 @@ def parse_wrapper_args(subp: argparse._SubParsersAction):
     add_parser.add_argument(
         "module",
         nargs="+",
-        help="Module(s) for which to add",
+        help="Module(s) to add",
     )
     _add_index_arg(add_parser)
     search_parser = subp.add_parser(
@@ -72,7 +72,7 @@ def parse_wrapper_args(subp: argparse._SubParsersAction):
     search_parser.add_argument(
         "module",
         nargs="+",
-        help="Module(s) for which to lookup",
+        help="Module(s) to look up",
     )
     _add_index_arg(search_parser)
 

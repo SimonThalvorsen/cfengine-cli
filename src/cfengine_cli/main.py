@@ -112,7 +112,7 @@ def _get_arg_parser():
     tst.add_argument(
         "files",
         nargs="*",
-        help="Files/Folder to lint (default is . (the entire project) )",
+        help="Files/Folder to lint (default is . (the entire project))",
     )
 
     dev_parser = subp.add_parser(
@@ -168,14 +168,14 @@ def _get_arg_parser():
 
 Auto-detects which repos to include based on the current working directory (core, masterfiles, enterprise)
 
-Enterprise' changelog also reflects changes in mission-portal, nova and buildscripts (dependency-updates)
+Enterprise's changelog also reflects changes in mission-portal, nova and buildscripts (dependency-updates)
 Core and Masterfiles only reflect themselves""",
         epilog="""Examples:
   - cfengine dev generate-changelog
     on 3.27.x this will check changelog for latest known (e.g. 3.27.1) and update the changelog for 3.27.1 -> 3.27.2
 
   - cfengine dev generate-changelog -o 3.26.0..3.27.0
-    on any branch will print changelog from version 2.26.0 -> 3.27.0 to stdout""",
+    on any branch will print changelog from version 3.26.0 -> 3.27.0 to stdout""",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument(

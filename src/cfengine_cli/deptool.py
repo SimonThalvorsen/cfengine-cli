@@ -91,7 +91,7 @@ def is_whitespace(s: str):
 
 
 class GitRepo:
-    """Class responsible for working with locally checked-out repository"""
+    """Class responsible for working with a locally checked-out repository"""
 
     def __init__(
         self,
@@ -283,7 +283,7 @@ class DepsReader:
         else:
             filtered_lines = (x for x in options_lines if "var_append DEPS" in x)
             only_deps = (re.sub('.*DEPS "(.*)".*', "\\1", x) for x in filtered_lines)
-        # currently only_deps is generator of space-separated deps,
+        # currently only_deps is a generator of space-separated deps,
         # i.e. each item can contain several items, like this:
         # list(only_deps) = ["lcov", "pthreads-w32 libgnurx"]
         # to "flatten" it we first join using spaces and then split on spaces
@@ -415,7 +415,7 @@ class DepsReader:
                 # of first column (with words "CFEngine version" in it) and,
                 # possibly, last ("Notes", which is now second-to-last).
                 # Between them are ref column widths, calculated earlier.
-                # Also we substract 2 to remove column "padding".
+                # Also we subtract 2 to remove column "padding".
                 column_widths = (
                     [column_widths[1] - 2]
                     + [ref_column_widths[ref] for ref in refs]  # "CFEngine version"
@@ -576,7 +576,7 @@ class DepsReader:
             c_dep_data = collections.OrderedDict()
             bolded_in_row = 0
 
-            # iterate over refs in non-overlapping pairs, and skipping the last odd ref
+            # iterate over refs in non-overlapping pairs, skipping the last odd ref
             for ref_A, ref_B in list(zip(refs, refs[1:]))[::2]:
                 version_A = deps_data[dep][ref_A]
                 version_B = deps_data[dep][ref_B]

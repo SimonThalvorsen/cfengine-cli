@@ -48,4 +48,4 @@ We have different suites:
 - Unit tests in `tests/unit` test individual python functions.
 - Formatting tests in `tests/format` test the formatter (`cfengine format`).
 - Linting tests in `tests/lint` test the linter.
-- Shell tests in `tests/shell` tests various subcommands and the tool as a whole in an end-to-end fashion.
+- Shell tests in `tests/shell` test various subcommands and the tool as a whole in an end-to-end fashion.

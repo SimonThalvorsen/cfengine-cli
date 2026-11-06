@@ -19,7 +19,7 @@ def init_promise_type(name=None, non_interactive=False):
     name = name or _prompt_for_name(
         non_interactive,
         validate=False,
-        hint="""Try to follow typical naming conventions e.g.
+        hint="""Try to follow typical naming conventions, e.g.
 - promise-type-groups
 - promise-type-docker-compose
 """,

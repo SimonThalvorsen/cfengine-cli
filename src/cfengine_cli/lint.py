@@ -66,12 +66,12 @@ IMPLIES_BODY = {"copy_from", "action"}
 
 KNOWN_FAULTY_FUNCTION_DEFS = {"regex_replace", "peers"}
 # Generally, we don't want to allow creating bodies / bundles with the same
-# name as a built in function, as it can make things more confusing
+# name as a built-in function, as it can make things more confusing
 # (harder to read / understand policy and look up definitions).
 #
 # There are a couple of pre-existing cases that we need to preserve for backwards
 # compatibility - bodies / bundles defined in masterfiles which have the same
-# name as a built in function.
+# name as a built-in function.
 
 
 @dataclass
@@ -210,7 +210,7 @@ class PolicyFile:
 class State:
     """This class is used to keep track of needed state while linting.
 
-    Not used in parsing, that is handled entirely by tree sitter library.
+    Not used in parsing, that is handled entirely by the tree sitter library.
     Used when we are iterating over (walking) nodes in the syntax tree.
 
     It has 3 different sets of information:
@@ -607,7 +607,7 @@ def _discover(policy_file: PolicyFile, state: State) -> int:
 def _lint_promise_guard(
     node: Node, state: State, location: str, syntax_data: SyntaxData
 ):
-    """Check that a promise type guard (e.g. `vars:`) for deprecation or unknown type."""
+    """Check a promise type guard (e.g. `vars:`) for deprecation or unknown type."""
     assert _text(node) and len(_text(node)) > 1 and _text(node)[-1] == ":"
     promise_type = _text(node)[0:-1]
     if state.strict and promise_type in syntax_data.DEPRECATED_PROMISE_TYPES:
@@ -701,7 +701,7 @@ def _lint_promise(node: Node, state: State, location: str, _syntax_data: SyntaxD
             )
 
         if len(value_nodes) > 1:
-            # Too many of vars_types was found
+            # Too many of vars_types were found
             # TODO: We could improve _highlight_range to highlight multiple nodes in a nice way
             nodes = ", ".join([_text(x) for x in value_nodes])
             raise ValidationError(

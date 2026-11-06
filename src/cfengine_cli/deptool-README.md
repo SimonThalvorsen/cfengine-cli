@@ -7,7 +7,7 @@ It supports printing to stdout in the Markdown table format, and printing to fil
 It can also generate basic SBOMs in the CycloneDX JSON format (see [below](https://github.com/cfengine/buildscripts/tree/master/scripts#generating-cyclonedx-json-sboms) for usage instructions).
 It can be used as a replacement for the [cf-bottom](https://github.com/cfengine/cf-bottom/) `depstable` command.
 
-`deptool.py` works on a local buildscripts repository. By default, the repository is assumed to be current working directory (i.e. `.`).
+`deptool.py` works on a local buildscripts repository. By default, the repository is assumed to be the current working directory (i.e. `.`).
 A custom path for the local repository can be specified using the `--root` argument.
 Running the script will modify the git state of the repository by checking out branches (and with `--patch`, also overwriting and git-adding `README.md`), so it might be preferable to [use a copy of the buildscripts repository](https://github.com/cfengine/buildscripts/tree/master/scripts#using-a-copy-of-the-repository).
 
@@ -56,7 +56,7 @@ WARNING:root:didn't find dep in line [| libgcc                                  
 | [libexpat](https://libexpat.github.io/)             | -      | 2.6.3  | 2.6.3  |
 | [PHP](https://php.net/)                             | 8.3.13 | 8.3.13 | 8.3.15 |
 | [PostgreSQL](https://www.postgresql.org/)           | 15.8   | 16.4   | 17.2   |
-| [nghttp2](https://nghttp2.opg/)                     | -      | -      | 1.64.0 |
+| [nghttp2](https://nghttp2.org/)                     | -      | -      | 1.64.0 |
 | [rsync](https://download.samba.org/pub/rsync/)      | 3.3.0  | 3.3.0  | 3.3.0  |
 
 ```

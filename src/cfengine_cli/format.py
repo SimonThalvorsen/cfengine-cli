@@ -598,7 +598,7 @@ def _can_single_line_promise(node: Node, indent: int, line_length: int) -> bool:
         return True
     if len(attrs) > 1:
         # We always want to multiline a promise with multiple attributes
-        # even if it would fit on one line, i.e this should be split:
+        # even if it would fit on one line, i.e. this should be split:
         # "foo" string => "bar", comment => "baz";
         return False
     if next_sib and next_sib.type == "half_promise":
@@ -615,7 +615,7 @@ def _can_single_line_promise(node: Node, indent: int, line_length: int) -> bool:
         children, indent, line_length
     ):
         # A promise with a stakeholder and no attributes might be split
-        # if the stakeholders are too long or include comments. i.e split this:
+        # if the stakeholders are too long or include comments, i.e. split this:
         # "foo" -> { "bar", "too long", "stakeholders", "list", "in here", "now" };
         assert not attrs  # Should have already returned in if above
         return False

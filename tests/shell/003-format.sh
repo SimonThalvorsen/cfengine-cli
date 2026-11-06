@@ -6,7 +6,7 @@ set -x
 # Verify that the line length parameter shows up in help
 cfengine format -h | grep -- "--line-length"
 
-# Test three common line length
+# Test three common line lengths
 for ll in 80 100 120; do
 	# Format the following HEREDOC and let wc count the longest line
 	l=$(cfengine format --line-length $ll - <<-EOF |

@@ -16,7 +16,7 @@ If your editor does not do this automatically, you can run these tools from the 
 make format
 ```
 
-## Installing from source:
+## Installing from source
 
 For developers working on CFEngine CLI, you can install it globally using pipx:
 
@@ -53,7 +53,7 @@ uv run bash tests/run-shell-tests.sh
 
 ## Releasing new versions
 
-Releases are [automated using a GH Action](https://github.com/cfengine/cfengine-cli/blob/main/.github/workflows/pypi-publish.yml)
+Releases are [automated using a GH Action](https://github.com/cfengine/cfengine-cli/blob/main/.github/workflows/pypi-publish.yml).
 We create tags and releases through the GitHub UI.
 Go to the releases section in GitHub:
 
@@ -107,7 +107,7 @@ Go through the prompts:
 https://github.com/cfengine/cfengine-cli/releases/tag/0.2.0
 ```
 
-Then check that everything went well;
+Then check that everything went well:
 
 https://github.com/cfengine/cfengine-cli/actions
 

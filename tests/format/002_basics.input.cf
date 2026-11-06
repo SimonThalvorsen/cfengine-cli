@@ -1,5 +1,5 @@
 # This shows some basics of policy language, without getting
-# too deep into edge cases and wrappting etc.
+# too deep into edge cases and wrapping etc.
 
 body common control{
 inputs => { "/var/cfengine/inputs/some_file.cf" };
@@ -27,7 +27,7 @@ string => "some_value";
 baz::
 "bam"
 if => "bar",
-# Comment at atttribute level
+# Comment at attribute level
 string => "some_value";
 "empty_list"
 slist => {

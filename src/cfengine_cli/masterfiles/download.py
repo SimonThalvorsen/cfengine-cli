@@ -20,9 +20,9 @@ MISSING_DATA_VERSIONS = ["3.10.0", "3.9.2"]
 """Rationale for each version:
 * 3.10.0:\\
     For some reason, the `"Masterfiles ready-to-install tarball"` is a .tar.gz tarball, rather than a .pkg.tar.gz tarball.
-    However, an unlisted analoguous URL for the .pkg.tar.gz tarball does exist.
+    However, an unlisted analogous URL for the .pkg.tar.gz tarball does exist.
 * 3.9.2:\\
-    No masterfiles are listed in the release data, but an unlisted analoguous URL does exist."""
+    No masterfiles are listed in the release data, but an unlisted analogous URL does exist."""
 
 HARDCODED_VERSIONS = COMMUNITY_ONLY_VERSIONS + MISSING_DATA_VERSIONS
 

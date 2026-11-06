@@ -198,7 +198,7 @@ def report(
         for agent in clients:
             rc = _refresh_agent(agent)
             if rc != 0:
-                log.error(f"Refresh failed on {agent.label})")
+                log.error(f"Refresh failed on {agent.label}")
                 errors += 1
 
     for hub in hubs:
@@ -207,7 +207,7 @@ def report(
         client_ips = [client.location.split("@", 1)[1] for client in clients]
         rc = _query_hub_delta(hub.hub, client_ips)
         if rc != 0:
-            log.error(f"Hub refresh failed on {hub.label})")
+            log.error(f"Hub refresh failed on {hub.label}")
             errors += 1
 
     if errors > 0:

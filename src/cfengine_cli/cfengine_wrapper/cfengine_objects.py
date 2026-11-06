@@ -78,7 +78,7 @@ class Executable:
         output = run_command(self.location, full_command, sudo=True)
         if (
             output is None
-        ):  # TODO: Test this, I've had some policy failing but returning output instead or error-code (I think)
+        ):  # TODO: Test this, I've had some policy failing but returning output instead of error-code (I think)
             # Error already logged in run_command
             return 1
         if output:

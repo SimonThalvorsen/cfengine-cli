@@ -1,6 +1,6 @@
 # CFEngine CLI cheatsheet
 
-Quick reference for `cfengine COMMANDS`
+Quick reference for `cfengine COMMANDS`.
 For the full command list, run `cfengine help` or `cfengine COMMAND --help`.
 
 ## Managing hosts
@@ -86,7 +86,7 @@ cfengine init --policy-set
 # Initialize an example build project for working on a custom promise type (python)
 cfengine init --promise-type
 
-# Initialize an exapmlte module project for build.cfengine.com (or internal use)
+# Initialize an example module project for build.cfengine.com (or internal use)
 cfengine init --policy-module
 
 # Initialize an example policy module that takes input data
