@@ -13,7 +13,8 @@ from cfengine_cli.utils import get_upstream_remote
 ACTIVE_BRANCHES = ["3.24.x", "3.27.x", "master"]
 
 HUMAN_NAME = {
-    "diffutils": "diffutils",
+    "coreutils": "Coreutils",
+    "diffutils": "Diffutils",
     "libacl": "libacl",
     "libattr": "libattr",
     "libcurl": "libcurl",
@@ -45,6 +46,7 @@ HUMAN_NAME = {
     "libcurl-hub": "libcurl-hub",
 }
 HOME_URL = {
+    "coreutils": "https://ftpmirror.gnu.org/coreutils/",
     "diffutils": "https://ftpmirror.gnu.org/diffutils/",
     "libacl": "https://download.savannah.gnu.org/releases/acl/",
     "libattr": "https://download.savannah.gnu.org/releases/attr",
