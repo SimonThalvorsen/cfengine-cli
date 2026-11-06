@@ -72,7 +72,8 @@ class Executable:
             result = subprocess.run(args)
             return result.returncode
 
-        full_command = f"{self.path} {command}"
+        # Include stderr, so cf-promises errors (e.g. duplicate bundle) are shown
+        full_command = f"{self.path} {command} 2>&1"
         log.info(f"Executing command {full_command} on {self.location}")
         output = run_command(self.location, full_command, sudo=True)
         if (

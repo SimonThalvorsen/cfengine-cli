@@ -8,6 +8,7 @@ from cfbs.cfbs_config import CFBSConfig
 from cfbs.utils import write_json, canonify
 from cfengine_cli.utils import UserError
 from cfbs.git import git_commit, git_init
+from cfbs.commands import init_command
 
 GITIGNORE = "out/\n*.tgz\n"
 
@@ -94,7 +95,9 @@ def init_policy_module(name=None, with_input=False, non_interactive=False):
 
     files = {
         os.path.join(module_name, "main.cf"): (
-            _main_cf_with_input(canonified) if with_input else _main_cf(name)
+            _main_cf_with_input(canonified)
+            if with_input
+            else _main_cf(name, canonified)
         ),
         "README.md": _module_readme(name, canonified, with_input),
         ".gitignore": GITIGNORE,
@@ -125,6 +128,15 @@ def init_policy_module(name=None, with_input=False, non_interactive=False):
 
     _print_next_steps(name, module_name, with_input)
     return 0
+
+
+def init_policy_set():
+    rc = init_command()
+    if rc == 0 and not os.path.exists(".gitignore"):
+        _write_file(".gitignore", GITIGNORE)
+        if CFBSConfig.get_instance().get("git"):
+            git_commit("Added .gitignore", scope=[".gitignore"])
+    return rc
 
 
 def _require_uninitialized():
@@ -172,7 +184,7 @@ def _module_definition(module_name, canonified, with_input, extra_steps=None):
     steps = [
         f"copy main.cf {target}",
         f"policy_files {target}",
-        f"bundles {canonified}:main" if with_input else "bundles main",
+        f"bundles {canonified}:main",
     ]
     steps.extend(extra_steps or [])
 
@@ -255,14 +267,30 @@ if __name__ == "__main__":
 """
 
 
-def _main_cf(name):
-    return f"""bundle agent main
+def _main_cf(name, namespace):
+    return f"""body file control
+{{
+  namespace => "{namespace}";
+}}
+
+bundle agent main
 {{
   vars:
     "message" string => "Hello from the '{name}' module";
 
   reports:
     "$(message)";
+}}
+
+body file control
+{{
+  namespace => "default";
+}}
+
+bundle agent __main__
+{{
+  methods:
+    "{namespace}:main";
 }}
 """
 
