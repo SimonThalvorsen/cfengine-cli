@@ -3341,6 +3341,27 @@
           "type": "slist",
           "visibility": "body"
         },
+        "package_installed": {
+          "attribute": "package_installed",
+          "range": ".*",
+          "status": "normal",
+          "type": "string",
+          "visibility": "body"
+        },
+        "package_module": {
+          "attribute": "package_module",
+          "range": ".*",
+          "status": "normal",
+          "type": "string",
+          "visibility": "body"
+        },
+        "package_uninstalled": {
+          "attribute": "package_uninstalled",
+          "range": ".*",
+          "status": "normal",
+          "type": "string",
+          "visibility": "body"
+        },
         "size_threshold": {
           "attribute": "size_threshold",
           "range": "0,99999999999",
