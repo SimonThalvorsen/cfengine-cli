@@ -1,0 +1,3 @@
+{
+  "vars": { "expected_contents": "mode=standalone\nretries=3\n" }
+}

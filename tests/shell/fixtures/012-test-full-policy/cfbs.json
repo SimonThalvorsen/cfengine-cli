@@ -1,0 +1,27 @@
+{
+  "name": "Full policy example",
+  "description": "Example description",
+  "type": "policy-set",
+  "git": false,
+  "build": [
+    {
+      "name": "masterfiles",
+      "description": "Official CFEngine Masterfiles Policy Framework (MPF)",
+      "url": "https://github.com/cfengine/masterfiles",
+      "commit": "1ac0cef8c592bfca1ce0e842744b354f90b5759b",
+      "branch": "master",
+      "added_by": "cfbs init",
+      "steps": ["run ./prepare.sh -y", "copy ./ ./"]
+    },
+    {
+      "name": "./overrides/",
+      "description": "Local subdirectory added using cfbs command line",
+      "tags": ["local"],
+      "added_by": "cfbs add",
+      "steps": [
+        "copy ./def.json def.json",
+        "copy ./services/init.cf services/init.cf"
+      ]
+    }
+  ]
+}

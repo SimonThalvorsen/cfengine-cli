@@ -1,0 +1,8 @@
+bundle agent real_policy_work
+{
+  files:
+    "/tmp/cfengine_test_suite_full_policy.txt"
+      create => "true",
+      content => "ran for $(def.instance_id)
+";
+}

@@ -1,0 +1,8 @@
+bundle agent test_instance_a
+{
+  assert:
+    "real policy ran for instance A"
+      file => "/tmp/cfengine_test_suite_full_policy.txt",
+      contents => "ran for A
+";
+}

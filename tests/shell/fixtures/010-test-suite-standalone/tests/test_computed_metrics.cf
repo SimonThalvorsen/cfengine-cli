@@ -1,0 +1,31 @@
+bundle agent variables
+{
+  vars:
+    "doubled" string => eval("3.5 * 2", "math", "infix");
+}
+
+bundle agent test_computed_metrics_equality
+{
+  methods:
+    "variables";
+
+  assert:
+    "doubled value equals seven"
+      real => "$(variables.doubled)",
+      equals => "7";
+}
+
+bundle agent test_computed_metrics_comparison
+{
+  methods:
+    "variables";
+
+  assert:
+    "doubled value is greater than five"
+      real => "$(variables.doubled)",
+      greater_than => "5";
+
+    "doubled value is less than five (should fail)"
+      real => "$(variables.doubled)",
+      less_than => "5";
+}

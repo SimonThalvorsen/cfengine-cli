@@ -1,0 +1,14 @@
+bundle agent test_app_config
+{
+  methods:
+    "configure" usebundle => configure_app;
+
+  assert:
+    "app config file exists"
+      file => "/tmp/cfengine_test_suite_app.conf",
+      exists => "true";
+
+    "app config file is world-writable (should fail)"
+      file => "/tmp/cfengine_test_suite_app.conf",
+      perms => "0777";
+}
