@@ -60,6 +60,37 @@ cfengine build --hub myhub --non-interactive
 cfengine deploy --hub myhub
 ```
 
+## Testing policy with `cfengine test`
+
+Runs `test_*.cf` files (bundles that contain their own `assert:` section) in disposable Docker containers and reports a pytest-style pass/fail summary.
+
+```bash
+# Auto-discover and run tests/test_*.cf
+cfengine test
+
+# Run specific files or directories instead
+cfengine test tests/test_foo.cf
+cfengine test tests/
+
+# Inside a cfbs project: builds first, then runs each test file at the end of
+# the project's real promises.cf (with that test's fixture applied), so the
+# tests see the state a full agent run leaves behind. A fixture
+# (tests/fixtures/test_<name>.json) is merged into the project's def.json
+cfengine test
+
+# Test against a custom base image (e.g. a different distro), bypassing the build cache
+cfengine test --dockerfile ./my-ubuntu.Dockerfile --rebuild
+
+# Inside a cfbs project: run only the test bundles, from a minimal generated
+# policy. Faster, but the project's policy then only ran once during setup,
+# without any fixture, and every test sees that snapshot
+cfengine test --test-only
+
+# Outside a cfbs project: test against a built masterfiles directory, e.g. to
+# use the standard library (m(), insert_lines(), ...) of that version
+cfengine test --masterfiles ./out/masterfiles
+```
+
 ## Running the CFEngine agent
 
 ```bash
