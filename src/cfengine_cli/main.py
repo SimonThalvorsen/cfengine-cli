@@ -106,13 +106,50 @@ def _get_arg_parser():
     tst.add_argument(
         "--strict",
         type=str,
-        default="yes",
-        help="Strict mode for linting. Default=yes, checks for undefined promise types, bundles, bodies, functions",
+        default="no",
+        help="Strict mode for linting. Default=no: test policy commonly calls "
+        "the masterfiles standard library (m(), insert_lines(), ...), which "
+        "strict mode would report as undefined. --strict=yes checks for "
+        "undefined promise types, bundles, bodies, functions",
     )
     tst.add_argument(
         "files",
         nargs="*",
         help="Files/Folder to lint (default is . (the entire project))",
+    )
+    tst.add_argument(
+        "--dockerfile",
+        type=str,
+        default=None,
+        help="Path to a custom Dockerfile (or its directory) to build the test "
+        "container from, instead of the built-in one -- e.g. to test against "
+        "a different base distro",
+    )
+    tst.add_argument(
+        "--rebuild",
+        action="store_true",
+        help="Force a clean rebuild of the test container image, bypassing "
+        "Docker's build cache",
+    )
+    tst.add_argument(
+        "--masterfiles",
+        type=str,
+        default=None,
+        help="Outside a cfbs project: a built masterfiles directory (e.g. "
+        "out/masterfiles from `cfbs build`) to test against, the way a cfbs "
+        "project uses its own build -- so tests run with the masterfiles "
+        "standard library (m(), insert_lines(), ...) of that exact version.",
+    )
+    tst.add_argument(
+        "--test-only",
+        action="store_true",
+        help="In a cfbs project, tests normally run at the end of the "
+        "project's real promises.cf (added via augments, with the test's "
+        "fixture applied), so each test sees the state a full agent run "
+        "leaves behind. --test-only runs just the test bundles from a minimal "
+        "generated policy instead: faster, but the project's policy then "
+        "only ran once, during setup and without any fixture, so tests see "
+        "that snapshot. Tests outside a cfbs project always run this way.",
     )
 
     dev_parser = subp.add_parser(
@@ -289,6 +326,10 @@ def run_command_with_args(args) -> int:
         return commands.test(
             args.files,
             (args.strict.lower() in ("y", "ye", "yes")),
+            args.dockerfile,
+            args.rebuild,
+            args.test_only,
+            args.masterfiles,
         )
     if args.command == "report":
         return cfengine_commands.report(

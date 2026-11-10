@@ -1,0 +1,5 @@
+promise agent assert
+{
+  path => "$(sys.workdir)/modules/promises/assert_promise_type.py";
+  interpreter => "/var/cfengine/bin/cfengine-selected-python";
+}

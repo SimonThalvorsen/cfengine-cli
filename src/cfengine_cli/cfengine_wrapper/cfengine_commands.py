@@ -24,7 +24,12 @@ from cfbs.commands import (
 )
 
 from cfengine_cli.utils import UserError
-from cfengine_cli.container import run_in_container
+from cfengine_cli.container import (
+    run_in_container,
+    run_files_in_container,
+    discover_test_files,
+    discover_module_files,
+)
 from cfengine_cli.cfengine_wrapper.cfengine_objects import (
     Executable,
     ensure_default_agent_flags,
@@ -320,12 +325,45 @@ def deploy(
     return error
 
 
-def test() -> int:
-    rc = build_command()
-    if rc != 0:
-        return rc
+def test(
+    files: list[str] | None = None,
+    masterfiles_dir: str | None = None,
+    dockerfile: str | None = None,
+    rebuild: bool = False,
+    test_only: bool = False,
+) -> int:
+    """Runs the tests, after container.prepare_test_masterfiles (and lint)
+    -- see there for masterfiles_dir."""
 
-    return run_in_container("out/masterfiles")
+    if files:
+        # Module files are libraries whether tests are auto-discovered or
+        # named explicitly, so a test sees the same bundles either way.
+        return run_files_in_container(
+            discover_module_files() + files,
+            masterfiles_dir=masterfiles_dir,
+            dockerfile=dockerfile,
+            rebuild=rebuild,
+            test_only=test_only,
+        )
+
+    discovered = discover_test_files()
+    if discovered:
+        return run_files_in_container(
+            discover_module_files() + discovered,
+            masterfiles_dir=masterfiles_dir,
+            dockerfile=dockerfile,
+            rebuild=rebuild,
+            test_only=test_only,
+        )
+
+    if masterfiles_dir is not None:
+        return run_in_container(masterfiles_dir, dockerfile=dockerfile, rebuild=rebuild)
+
+    raise UserError(
+        "Nothing to test here -- no cfbs.json project and no test_*.cf files "
+        "found. Add a test_*.cf file, or run `cfengine init` to start a cfbs "
+        "project."
+    )
 
 
 def show(target: list[str] | None = None) -> int:

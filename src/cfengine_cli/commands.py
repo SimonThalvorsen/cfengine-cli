@@ -14,6 +14,10 @@ from cfengine_cli.initialize_project import (
     init_policy_set,
     init_promise_type,
 )
+from cfengine_cli.container import (
+    assert_module_declaration_path,
+    prepare_test_masterfiles,
+)
 from cf_remote.paths import cf_remote_dir
 from cfengine_cli.cfengine_wrapper.cfengine_commands import test as _cfengine_test
 from pydantic import ValidationError
@@ -51,15 +55,25 @@ def lint(files, strict, syntax_path) -> int:
     return errors
 
 
-def test(files, strict) -> int:
-    errors = _lint(files, strict, None)
+def test(
+    files, strict, dockerfile=None, rebuild=False, test_only=False, masterfiles=None
+) -> int:
+    # Adds the assert module so linting passes
+    lint_targets = (list(files) if files else ["."]) + [
+        assert_module_declaration_path()
+    ]
+
+    errors = _lint(lint_targets, strict, None)
     if errors != 0:
         plural = "error" if errors == 1 else "errors"
         print(f"Lint failed, {errors} {plural} in total. Skipping build/deploy/run.")
         return errors
 
     print("Lint passed, no errors found.")
-    return _cfengine_test()
+    rc, masterfiles_dir = prepare_test_masterfiles(masterfiles)
+    if rc != 0:
+        return rc
+    return _cfengine_test(files, masterfiles_dir, dockerfile, rebuild, test_only)
 
 
 def dev(subcommand, args) -> int:
