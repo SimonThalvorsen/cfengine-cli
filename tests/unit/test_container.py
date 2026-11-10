@@ -270,6 +270,41 @@ def test_bundle_names_declared_in_excludes_bundles_without_assert_section(tmp_pa
     assert container._bundle_names_declared_in(str(path)) == ["test_foo"]
 
 
+def test_bundle_names_declared_in_ignores_comments_and_strings(tmp_path):
+    path = tmp_path / "test_foo.cf"
+    path.write_text(
+        "# bundle agent commented_out\n"
+        'bundle agent helper\n{\n  reports:\n    "assert: { in a string";\n}\n'
+        '\nbundle agent test_foo\n{\n  assert:\n    "x" pass => "true";\n}\n'
+    )
+    assert container._bundle_names_declared_in(str(path)) == ["test_foo"]
+
+
+def test_bundle_names_declared_in_namespaces_bundles(tmp_path):
+    path = tmp_path / "test_foo.cf"
+    path.write_text(
+        'body file control\n{\n  namespace => "myns";\n}\n'
+        '\nbundle agent test_foo\n{\n  assert:\n    "x" pass => "true";\n}\n'
+    )
+    assert container._bundle_names_declared_in(str(path)) == ["myns:test_foo"]
+
+
+def test_bundle_names_declared_in_rejects_test_bundle_with_parameters(tmp_path):
+    path = tmp_path / "test_foo.cf"
+    path.write_text(
+        'bundle agent test_foo(arg)\n{\n  assert:\n    "x" pass => "true";\n}\n'
+    )
+    with pytest.raises(UserError, match="takes parameters"):
+        container._bundle_names_declared_in(str(path))
+
+
+def test_bundle_names_declared_in_raises_user_error_on_unparsable_file(tmp_path):
+    path = tmp_path / "test_foo.cf"
+    path.write_text("bundle agent test_foo\n")
+    with pytest.raises(UserError, match="Could not parse"):
+        container._bundle_names_declared_in(str(path))
+
+
 def test_bundle_names_declared_in_raises_without_declaration(tmp_path):
     path = tmp_path / "test_foo.cf"
     path.write_text("# no bundle here\n")

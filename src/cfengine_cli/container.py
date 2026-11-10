@@ -20,6 +20,7 @@ from cfengine_cli.report import (
     run_and_scan_asserts,
     print_assert_totals,
 )
+from cfengine_cli.lint import _parse_policy_file
 from cfengine_cli.utils import UserError
 
 _DOCKERFILE_DIR = os.path.join(os.path.dirname(__file__), "docker", "test-agent")
@@ -27,8 +28,6 @@ _IMAGE_TAG = "cfengine-cli-test-agent:latest"
 _ASSERT_MODULE_DIR = "/var/cfengine/modules/promises"
 _STDLIB = "/var/cfengine/masterfiles/lib/stdlib.cf"
 _PROMISE_AGENT_DECLARATION_RE = re.compile(r"promise\s+agent\s+(\w+)")
-_BUNDLE_AGENT_DECLARATION_RE = re.compile(r"bundle\s+agent\s+(\w+)")
-_ASSERT_SECTION_RE = re.compile(r"^\s*assert\s*:", re.MULTILINE)
 
 
 def assert_module_declaration_path() -> str:
@@ -237,25 +236,42 @@ def _read_file(path: str) -> str:
         return file.read()
 
 
-def _bundle_bodies_declared_in(content: str) -> list:
-    """[(name, body), ...] for every `bundle agent <name> { ... }` in
-    content, in order, body being the brace-matched text between (and
-    including) its own braces."""
-    bodies = []
-    for match in _BUNDLE_AGENT_DECLARATION_RE.finditer(content):
-        name = match.group(1)
-        start = content.index("{", match.end())
-        depth = 0
-        end = start
-        for end in range(start, len(content)):
-            if content[end] == "{":
-                depth += 1
-            elif content[end] == "}":
-                depth -= 1
-                if depth == 0:
-                    break
-        bodies.append((name, content[start : end + 1]))
-    return bodies
+def _node_text(node) -> str:
+    return node.text.decode()
+
+
+def _file_control_namespace(body_block) -> str | None:
+    """The namespace a `body file control` block sets, if any."""
+    kinds = {child.type: _node_text(child) for child in body_block.children}
+    if (kinds.get("body_block_type"), kinds.get("body_block_name")) != (
+        "file",
+        "control",
+    ):
+        return None
+    for body in body_block.children:
+        if body.type != "body_block_body":
+            continue
+        for attribute in body.children:
+            if attribute.type != "attribute":
+                continue
+            name, *rest = attribute.children
+            if _node_text(name) == "namespace" and rest:
+                return _node_text(rest[-1]).strip("\"'")
+    return None
+
+
+def _has_assert_section(bundle_block) -> bool:
+    for body in bundle_block.children:
+        if body.type != "bundle_block_body":
+            continue
+        for section in body.children:
+            if section.type != "bundle_section":
+                continue
+            guard = section.children[0] if section.children else None
+            if guard is not None and guard.type == "promise_guard":
+                if _node_text(guard).rstrip(":").strip() == "assert":
+                    return True
+    return False
 
 
 def _bundle_names_declared_in(path: str) -> list:
@@ -264,12 +280,39 @@ def _bundle_names_declared_in(path: str) -> list:
     `assert:` section (e.g. a shared bundle computing some vars) is just
     available to be called via `methods:` from a test bundle, like any other
     bundle in this file's inputs, without being reported as a test of its
-    own."""
-    names = [
-        name
-        for name, body in _bundle_bodies_declared_in(_read_file(path))
-        if _ASSERT_SECTION_RE.search(body)
-    ]
+    own.
+
+    Uses the same syntax tree as `cfengine lint`, so comments and strings
+    can't fake a bundle or a section. A bundle after a `body file control`
+    namespace is returned namespaced (`ns:name`), as the bundlesequence
+    needs it."""
+    tree, _lines, _data = _parse_policy_file(path)
+    if tree.root_node.has_error:
+        raise UserError(f"Could not parse {path} -- check it with `cfengine lint`")
+
+    names = []
+    namespace = "default"
+    for node in tree.root_node.children:
+        if node.type == "body_block":
+            namespace = _file_control_namespace(node) or namespace
+            continue
+        if node.type != "bundle_block":
+            continue
+        kinds = {child.type: child for child in node.children}
+        if _node_text(kinds["bundle_block_type"]) != "agent":
+            continue
+        if not _has_assert_section(node):
+            continue
+        name = _node_text(kinds["bundle_block_name"])
+        if "parameter_list" in kinds:
+            raise UserError(
+                f"Test bundle '{name}' in {path} takes parameters -- a bundle "
+                "with an assert: section is run directly, so it can't take "
+                "any. Move the asserts into a bundle without parameters, or "
+                "call this one from such a bundle via methods:."
+            )
+        names.append(name if namespace == "default" else f"{namespace}:{name}")
+
     if not names:
         raise UserError(f"No bundle with an 'assert:' section found in {path}")
     return names
